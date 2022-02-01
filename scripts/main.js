@@ -1,1 +1,3 @@
-// Put your JavaScript here
+canvas = document.getElementById("myCanvas");
+
+
