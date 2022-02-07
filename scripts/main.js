@@ -39,39 +39,26 @@ function preload() {
 
 function create() {
     this.add.image(400, 300, 'sky');
-    
-    platforms = this.physics.add.staticGroup();
-
-    platforms.create(400, 568, 'ground').setScale(2).refreshBody();
-
-    platforms.create(600, 400, 'ground')
-    platforms.create(50, 250, 'ground')
-    platforms.create(750, 220, 'ground')
 
     box_config = {
-        collideWorldBounds: true,
-        dragX: 1000,
-        dragY: 1000,
+        collideWorldBounds: true,/*
+        dragX: 10000,
+        dragY: 10000,*/
     }
 
     boxes = this.physics.add.group(box_config);
+    locations = [
+        [0, 10, 10, 10]
+    ]
 
-    boxes.create(500, 100, 'box')
-
-    boxes.create(100, 200, 'box')
-    boxes.create(150, 500, 'box')
-    boxes.create(200, 200, 'box')
-
-
+    make(boxes, locations, 'box')
 
     player = this.physics.add.sprite(100, 450, 'ninja');
 
     player.setBounce(0);
     player.setCollideWorldBounds(true);
-    this.physics.add.collider(player, platforms);
-    this.physics.add.collider(player, boxes)
-    this.physics.add.collider(boxes, platforms)
-    this.physics.add.collider(boxes, boxes)
+    this.physics.add.collider(player, boxes, collisionCallback, moveBox)
+    this.physics.add.collider(boxes, boxes, collisionCallback, moveBox)
 
     this.anims.create({
         key: 'idle',
@@ -158,4 +145,60 @@ function update() {
     if (!m.move || m.horiz && m.vert) {
         player.anims.stop();
     }
+}
+
+function make(group, locations, key) {
+    for(let i = 0; i < locations.length; i++) {
+        coords = locations[i]
+        if (coords.length == 2) {
+            b = group.create(coords[0]*32 + 16, coords[1]*32 + 16, key);
+            b.setImmovable(true);
+            b.tileX = coords[0];
+            b.tileY = coords[1];
+            b.locations = locations
+        } else if (coords.length == 4) {
+            let x_min = Math.min(coords[0], coords[2])
+            let x_max = Math.max(coords[0], coords[2])
+            let y_min = Math.min(coords[1], coords[3])
+            let y_max = Math.max(coords[1], coords[3])
+            for (let x = x_min; x <= x_max;  x++) {
+                for (let y = y_min; y <= y_max; y++) {
+                    b = group.create(x*32 + 16, y*32 + 16, key)
+                    b.setImmovable(true);
+                    b.tileX = x;
+                    b.tileY = y;
+                    b.locations = locations
+                }
+            }
+        }
+    }
+}
+
+function collisionCallback(player, box) {
+    if(player.body.touching.up && !coordsIn([box.tileX, box.tileY-1], box.locations)) {
+        box.setImmovable(false)
+        box.tileY -= 1
+    }
+}
+
+function moveBox(obj1, obj2) {
+    return true
+}
+
+function coordsIn(coords, collection) {
+    for (let i = 0; i < collection.length; i++) {
+        group = collection[i];
+        if (group.length == 2) {
+            return true;
+        } else if (group.length == 2) {
+            let x_min = Math.min(coords[0], coords[2])
+            let x_max = Math.max(coords[0], coords[2])
+            let y_min = Math.min(coords[1], coords[3])
+            let y_max = Math.max(coords[1], coords[3])
+            if (x_min <= coords[0] <= x_max && y_min <= coords[1] <= y_max) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
