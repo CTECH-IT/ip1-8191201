@@ -3,17 +3,21 @@ let tileHeight = 18;
 
 class SokobanLevel extends Phaser.Scene {
 
-    constructor(name, box_locations, wall_locations, player_start) {
+    constructor(name, box_locations, wall_locations, goal_locations, player_start) {
         super(name)
         this.box_locations = box_locations
         this.wall_locations = wall_locations
+        this.goal_locations = goal_locations
         this.player_start = player_start
     }
 
     preload() {
         this.load.image('sky', 'assets/sky.png');
+        this.load.image('floor', 'assets/floor.png');
         this.load.image('box', 'assets/box.png');
-        this.load.image('wall', 'assets/wall.png');
+        this.load.image('wall', 'assets/wall_red.png');
+        this.load.image('goal', 'assets/goal.png');
+        this.load.image('goal_overlay', 'assets/goal_overlay.png');
         this.load.spritesheet('ninja', 
             'assets/ninjasprite.png',
             { frameWidth: 32, frameHeight: 32 , margin: 2, spacing: 2}
@@ -21,14 +25,16 @@ class SokobanLevel extends Phaser.Scene {
     }
 
     create() {
-        this.add.image(400, 300, 'sky');
+        this.add.image(400, 288, 'floor');
 
         let box_config = {
             collideWorldBounds: true
         }
 
         this.worldMap = Array.from(Array(tileWidth), () => new Array(tileHeight))
+        this.goalMap = new Array()
         let worldMap = this.worldMap
+        let goalMap = this.goalMap
     
         this.boxes = this.physics.add.group(box_config);
         let boxes = this.boxes
@@ -37,9 +43,16 @@ class SokobanLevel extends Phaser.Scene {
         this.walls = this.physics.add.group(box_config)
         let walls = this.walls
         let wall_locations = this.wall_locations
+
+        this.goals = this.physics.add.group(box_config)
+        let goals = this.goals
+        let goal_locations = this.goal_locations
+        makeGoals(worldMap, goalMap, goals, goal_locations, 'goal')
     
         makeBoxes(worldMap, boxes, box_locations, 'box')
         makeBoxes(worldMap, walls, wall_locations, 'wall')
+        
+        makeOverlays(goals, goal_locations, 'goal_overlay')
     
         this.player = this.physics.add.sprite(this.player_start[0]*32+16, this.player_start[1]*32+16, 'ninja');
         let player = this.player
@@ -169,6 +182,64 @@ function makeBoxes(worldMap, group, locations, key) {
                         throw new EvalError('object already exists at location')
                     }
                     worldMap[x][y] = b;
+                }
+            }
+        }
+    }
+}
+
+function makeGoals(worldMap, goalMap, group, locations, key) {
+    for(let i = 0; i < locations.length; i++) {
+        let coords = locations[i]
+        if (coords.length == 2) {
+            let b = group.create(coords[0]*32 + 16, coords[1]*32 + 16, key);
+            b.setImmovable(true);
+            b.tileX = coords[0];
+            b.tileY = coords[1];
+            if (worldMap[coords[0]][coords[1]] != null) {
+                throw new EvalError('object already exists at location')
+            }
+            goalMap.push(b)
+        } else if (coords.length == 4) {
+            let x_min = Math.min(coords[0], coords[2])
+            let x_max = Math.max(coords[0], coords[2])
+            let y_min = Math.min(coords[1], coords[3])
+            let y_max = Math.max(coords[1], coords[3])
+            for (let x = x_min; x <= x_max;  x++) {
+                for (let y = y_min; y <= y_max; y++) {
+                    let b = group.create(x*32 + 16, y*32 + 16, key)
+                    b.setImmovable(true);
+                    b.tileX = x;
+                    b.tileY = y;
+                    if (worldMap[x][y] != null) {
+                        throw new EvalError('object already exists at location')
+                    }
+                    goalMap.push(b)
+                }
+            }
+        }
+    }
+}
+
+function makeOverlays(group, locations, key) {
+    for(let i = 0; i < locations.length; i++) {
+        let coords = locations[i]
+        if (coords.length == 2) {
+            let b = group.create(coords[0]*32 + 16, coords[1]*32 + 16, key);
+            b.setImmovable(true);
+            b.tileX = coords[0];
+            b.tileY = coords[1];
+        } else if (coords.length == 4) {
+            let x_min = Math.min(coords[0], coords[2])
+            let x_max = Math.max(coords[0], coords[2])
+            let y_min = Math.min(coords[1], coords[3])
+            let y_max = Math.max(coords[1], coords[3])
+            for (let x = x_min; x <= x_max;  x++) {
+                for (let y = y_min; y <= y_max; y++) {
+                    let b = group.create(x*32 + 16, y*32 + 16, key)
+                    b.setImmovable(true);
+                    b.tileX = x;
+                    b.tileY = y;
                 }
             }
         }
