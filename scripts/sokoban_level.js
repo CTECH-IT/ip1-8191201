@@ -24,9 +24,7 @@ class SokobanLevel extends Phaser.Scene {
         this.add.image(400, 300, 'sky');
 
         let box_config = {
-            collideWorldBounds: true,/*
-            dragX: 10000,
-            dragY: 10000,*/
+            collideWorldBounds: true
         }
 
         this.worldMap = Array.from(Array(tileWidth), () => new Array(tileHeight))
@@ -48,8 +46,8 @@ class SokobanLevel extends Phaser.Scene {
     
         player.setBounce(0);
         player.setCollideWorldBounds(true);
-        player.body.setSize(20, 16, true);
-        player.body.setOffset(6, 16)
+        player.body.setSize(20, 20, true);
+        player.body.setOffset(6, 12)
         this.physics.add.collider(player, boxes, playerBoxCallback, playerBoxProcessCallback)
         this.physics.add.collider(player, walls)
         this.physics.add.collider(boxes, boxes)
@@ -146,7 +144,7 @@ function makeBoxes(worldMap, group, locations, key) {
     for(let i = 0; i < locations.length; i++) {
         let coords = locations[i]
         if (coords.length == 2) {
-            b = group.create(coords[0]*32 + 16, coords[1]*32 + 16, key);
+            let b = group.create(coords[0]*32 + 16, coords[1]*32 + 16, key);
             b.setImmovable(true);
             b.tileX = coords[0];
             b.tileY = coords[1];
