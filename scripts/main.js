@@ -1,26 +1,36 @@
+import SokobanLevel from "./sokoban_level.js";
+
 var score = 0;
 var scoreText;
 
+let tileWidth = 25;
+let tileHeight = 18;
+
 let config = {
     type: Phaser.AUTO,
-    width: 800,
-    height: 600,
+    width: tileWidth*32,
+    height: tileHeight*32,
     physics: {
         default: 'arcade',
         arcade: {
-            debug: false,
+            debug: true,
             forceX: true
         }
     },
-    scene: {
-        preload: preload,
-        create: create,
-        update: update
-    }
+    scene: [new SokobanLevel('level1', [
+        [10, 6, 10, 9]
+    ], [
+        [5, 5, 15, 5],
+        [15, 6, 15, 9],
+        [5, 10, 15, 10],
+        [5, 6, 5, 9],
+    ], [6, 6])]
 }
 
 let game = new Phaser.Game(config)
 
+
+/*
 function preload() {
     this.load.image('sky', 'assets/sky.png');
     this.load.image('ground', 'assets/platform.png');
@@ -41,14 +51,12 @@ function create() {
     this.add.image(400, 300, 'sky');
 
     box_config = {
-        collideWorldBounds: true,/*
-        dragX: 10000,
-        dragY: 10000,*/
+        collideWorldBounds: true
     }
 
     boxes = this.physics.add.group(box_config);
     locations = [
-        [0, 10, 10, 10]
+        [10, 0, 10, 18]
     ]
 
     make(boxes, locations, 'box')
@@ -57,8 +65,8 @@ function create() {
 
     player.setBounce(0);
     player.setCollideWorldBounds(true);
-    this.physics.add.collider(player, boxes, collisionCallback, moveBox)
-    this.physics.add.collider(boxes, boxes, collisionCallback, moveBox)
+    this.physics.add.collider(player, boxes, playerBoxCallback, playerBoxProcessCallback)
+    this.physics.add.collider(boxes, boxes)
 
     this.anims.create({
         key: 'idle',
@@ -100,8 +108,6 @@ function update() {
     cursors = this.input.keyboard.createCursorKeys();
     keys = this.input.keyboard.addKeys({ up: 'W', left: 'A', down: 'S', right: 'D' });
     move = false;
-    //boxes.setVelocityX(0);
-    //boxes.setVelocityY(0);
 
     m = {
         left: cursors.left.isDown || keys.left.isDown,
@@ -149,13 +155,13 @@ function update() {
 
 function make(group, locations, key) {
     for(let i = 0; i < locations.length; i++) {
-        coords = locations[i]
+        let coords = locations[i]
         if (coords.length == 2) {
             b = group.create(coords[0]*32 + 16, coords[1]*32 + 16, key);
             b.setImmovable(true);
             b.tileX = coords[0];
             b.tileY = coords[1];
-            b.locations = locations
+            b.isMoving = false;
         } else if (coords.length == 4) {
             let x_min = Math.min(coords[0], coords[2])
             let x_max = Math.max(coords[0], coords[2])
@@ -167,38 +173,58 @@ function make(group, locations, key) {
                     b.setImmovable(true);
                     b.tileX = x;
                     b.tileY = y;
-                    b.locations = locations
+                    b.isMoving = false;
                 }
             }
         }
     }
 }
 
-function collisionCallback(player, box) {
-    if(player.body.touching.up && !coordsIn([box.tileX, box.tileY-1], box.locations)) {
-        box.setImmovable(false)
+function playerBoxCallback(player, box) {
+    if(player.body.touching.up && !coordsIn([box.tileX, box.tileY-1], boxes) && box.tileY-1 >= 0) {
         box.tileY -= 1
+        
+    } else if(player.body.touching.down && !coordsIn([box.tileX, box.tileY+1], boxes) && box.tileY+1 <= tileHeight) {
+        box.tileY += 1
+        
+    } else if(player.body.touching.left && !coordsIn([box.tileX-1, box.tileY], boxes) && box.tileX-1 >= 0) {
+        box.tileX -= 1
+        
+    } else if(player.body.touching.right && !coordsIn([box.tileX+1, box.tileY], boxes) && box.tileX+1 <= tileWidth) {
+        box.tileX += 1
+        
+    } else {
+        return
+    }
+    box.isMoving = true;
+    box.scene.tweens.add({
+        targets: box,
+        x: box.tileX*32 + 16,
+        y: box.tileY*32 + 16,
+        duration: 100,
+        ease: 'Power2',
+        onComplete: function (tween, targets) {
+            for (let i = 0; i < targets.length; i++) {
+                targets[i].isMoving = false
+            }
+        }
+    });
+}
+
+function playerBoxProcessCallback(player, box) {
+    if (!box.isMoving) {
+        return true
+    } else {
+        return false
     }
 }
 
-function moveBox(obj1, obj2) {
-    return true
-}
-
-function coordsIn(coords, collection) {
-    for (let i = 0; i < collection.length; i++) {
-        group = collection[i];
-        if (group.length == 2) {
+function coordsIn(coords, group) {
+    objs = group.children.entries;
+    for (let i = 0; i < objs.length; i++) {
+        if(objs[i].tileX == coords[0] && objs[i].tileY == coords[1]) {
             return true;
-        } else if (group.length == 2) {
-            let x_min = Math.min(coords[0], coords[2])
-            let x_max = Math.max(coords[0], coords[2])
-            let y_min = Math.min(coords[1], coords[3])
-            let y_max = Math.max(coords[1], coords[3])
-            if (x_min <= coords[0] <= x_max && y_min <= coords[1] <= y_max) {
-                return true;
-            }
         }
     }
     return false;
-}
+}*/
