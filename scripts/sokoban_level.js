@@ -218,4 +218,22 @@ function coordsIn(coords, group) {
     return false;
 }
 
+function search(box, dx, dy, boxes, walls) {
+    let x = box.tileX;
+    let y = box.tileY;
+
+    while (coordsIn([x,y], boxes)) {
+        x += dx;
+        y += dy;
+    }
+    
+    if (x < 0 || y < 0 || x >= tileWidth || y >= tileHeight) {
+        return -1;
+    } else if (coordsIn([x,y], walls)) {
+        return -1;
+    } else {
+        return [x, y]
+    }
+}
+
 export default SokobanLevel;
