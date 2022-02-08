@@ -42,9 +42,6 @@ class SokobanLevel extends Phaser.Scene {
     
         makeBoxes(worldMap, boxes, box_locations, 'box')
         makeBoxes(worldMap, walls, wall_locations, 'wall')
-
-        console.log(worldMap)
-        
     
         this.player = this.physics.add.sprite(this.player_start[0]*32+16, this.player_start[1]*32+16, 'ninja');
         let player = this.player
@@ -182,50 +179,72 @@ function makeBoxes(worldMap, group, locations, key) {
 
 function playerBoxCallback(player, box) {
     let map = box.scene.worldMap
+    let toMove = box
     if(player.body.touching.up) {
         toMove = search(box, 0, -1, map)
         if(toMove == null) {
             return;
         }
-        box.tileY -= 1
+        for (let n = 0; n < toMove.length; n++) {
+            let b = toMove[n]
+            map[b.tileX][b.tileY] = null
+            b.tileY -= 1
+        }
         
     } else if(player.body.touching.down) {
         toMove = search(box, 0, 1, map)
         if(toMove == null) {
             return;
         }
-        box.tileY += 1
+        for (let n = 0; n < toMove.length; n++) {
+            let b = toMove[n]
+            map[b.tileX][b.tileY] = null
+            b.tileY += 1
+        }
         
     } else if(player.body.touching.left) {
         toMove = search(box, -1, 0, map)
         if(toMove == null) {
             return;
         }
-        box.tileX -= 1
+        for (let n = 0; n < toMove.length; n++) {
+            let b = toMove[n]
+            map[b.tileX][b.tileY] = null
+            b.tileX -= 1
+        }
         
     } else if(player.body.touching.right) {
         toMove = search(box, 1, 0, map)
         if(toMove == null) {
             return;
         }
-        box.tileX += 1
+        for (let n = 0; n < toMove.length; n++) {
+            let b = toMove[n]
+            map[b.tileX][b.tileY] = null
+            b.tileX += 1
+        }
         
     } else {
         return
     }
-    box.isMoving = true;
-    box.scene.tweens.add({
-        targets: box,
-        x: box.tileX*32 + 16,
-        y: box.tileY*32 + 16,
-        duration: 100,
-        ease: 'Power2',
-        onComplete: function (tween, targets) {
-            for (let i = 0; i < targets.length; i++) {
-                targets[i].isMoving = false
+    for (let i = 0; i < toMove.length; i++) {
+        let b = toMove[i]
+        map[b.tileX][b.tileY] = b
+        b.isMoving = true;
+
+        b.scene.tweens.add({
+            targets: b,
+            x: b.tileX*32 + 16,
+            y: b.tileY*32 + 16,
+            duration: 100,
+            ease: 'Power2',
+            onComplete: function (tween, targets) {
+                for (let i = 0; i < targets.length; i++) {
+                    targets[i].isMoving = false
+                }
             }
-        }
-    });
+        });
+    }
 }
 
 function playerBoxProcessCallback(player, box) {
@@ -251,26 +270,44 @@ function search(box, dx, dy, worldMap) {
     let y = box.tileY;
 
     while (0 <= x && x < tileWidth && 0 <= y && y < tileHeight) {
+        if (worldMap[x][y] == null) {
+            break;
+        }
         if (worldMap[x][y].texture.key != 'box') {
             break;
         }
         x += dx;
         y += dy;
     }
-
-    lastKey = worldMap[x][y].texture.key
     
     if (x < 0 || y < 0 || x >= tileWidth || y >= tileHeight) {
         return null;
-    } else if (lastKey == 'wall') {
+    } else if (worldMap[x][y] != null) {
         return null;
     } else {
-        result = new Array()
-        for (let i = box.tileX + dx; i < x; i++) {
-            for (let j = box.tileY + dy; j < y; j++) {
-                result.push(worldMap[i][j])
+        let result = new Array()
+        if (dy == 0) {
+            if (dx == -1) {
+                for (let i = box.tileX; i > x; i--) {
+                    result.push(worldMap[i][y])
+                }
+            } else if (dx == 1) {
+                for (let i = box.tileX; i < x; i++) {
+                    result.push(worldMap[i][y])
+                }
+            }
+        } else if (dx == 0) {
+            if (dy == -1) {
+                for (let j = box.tileY; j > y; j--) {
+                    result.push(worldMap[x][j])
+                }
+            } else if (dy == 1) {
+                for (let j = box.tileY; j < y; j++) {
+                    result.push(worldMap[x][j])
+                }
             }
         }
+        console.log(result)
         return result;
     }
 }
