@@ -28,6 +28,9 @@ class SokobanLevel extends Phaser.Scene {
             dragX: 10000,
             dragY: 10000,*/
         }
+
+        this.worldMap = Array.from(Array(tileWidth), () => new Array(tileHeight))
+        let worldMap = this.worldMap
     
         this.boxes = this.physics.add.group(box_config);
         let boxes = this.boxes
@@ -37,8 +40,10 @@ class SokobanLevel extends Phaser.Scene {
         let walls = this.walls
         let wall_locations = this.wall_locations
     
-        makeBoxes(boxes, box_locations, 'box')
-        makeBoxes(walls, wall_locations, 'wall')
+        makeBoxes(worldMap, boxes, box_locations, 'box')
+        makeBoxes(worldMap, walls, wall_locations, 'wall')
+
+        console.log(worldMap)
         
     
         this.player = this.physics.add.sprite(this.player_start[0]*32+16, this.player_start[1]*32+16, 'ninja');
@@ -106,12 +111,12 @@ class SokobanLevel extends Phaser.Scene {
         m.move = m.horiz || m.vert;
     
         if (m.left && !m.vert) {
-            player.setVelocityX(-160);
+            player.setVelocityX(-100);
             player.anims.play('left', true);
             move = true;
         }
         else if (m.right && !m.vert) {
-            player.setVelocityX(160);
+            player.setVelocityX(100);
             player.anims.play('right', true);
             move = true;
         }
@@ -121,12 +126,12 @@ class SokobanLevel extends Phaser.Scene {
     
         if (m.up && !m.horiz)
         {
-            player.setVelocityY(-160);
+            player.setVelocityY(-100);
             player.anims.play('up', true);
             move = true;
         }
         else if (m.down && !m.horiz) {
-            player.setVelocityY(160);
+            player.setVelocityY(100);
             player.anims.play('down', true);
             move = true;
         }
@@ -140,7 +145,7 @@ class SokobanLevel extends Phaser.Scene {
     }
 }
 
-function makeBoxes(group, locations, key) {
+function makeBoxes(worldMap, group, locations, key) {
     for(let i = 0; i < locations.length; i++) {
         let coords = locations[i]
         if (coords.length == 2) {
@@ -149,6 +154,10 @@ function makeBoxes(group, locations, key) {
             b.tileX = coords[0];
             b.tileY = coords[1];
             b.isMoving = false;
+            if (worldMap[coords[0]][coords[1]] != null) {
+                throw new EvalError('object already exists at location')
+            }
+            worldMap[coords[0]][coords[1]] = b;
         } else if (coords.length == 4) {
             let x_min = Math.min(coords[0], coords[2])
             let x_max = Math.max(coords[0], coords[2])
@@ -161,6 +170,10 @@ function makeBoxes(group, locations, key) {
                     b.tileX = x;
                     b.tileY = y;
                     b.isMoving = false;
+                    if (worldMap[x][y] != null) {
+                        throw new EvalError('object already exists at location')
+                    }
+                    worldMap[x][y] = b;
                 }
             }
         }
@@ -168,18 +181,33 @@ function makeBoxes(group, locations, key) {
 }
 
 function playerBoxCallback(player, box) {
-    let boxes = box.scene.boxes
-    let walls = box.scene.walls
-    if(player.body.touching.up && !coordsIn([box.tileX, box.tileY-1], boxes) && !coordsIn([box.tileX, box.tileY-1], walls) && box.tileY-1 >= 0) {
+    let map = box.scene.worldMap
+    if(player.body.touching.up) {
+        toMove = search(box, 0, -1, map)
+        if(toMove == null) {
+            return;
+        }
         box.tileY -= 1
         
-    } else if(player.body.touching.down && !coordsIn([box.tileX, box.tileY+1], boxes) && !coordsIn([box.tileX, box.tileY+1], walls) && box.tileY+1 <= tileHeight) {
+    } else if(player.body.touching.down) {
+        toMove = search(box, 0, 1, map)
+        if(toMove == null) {
+            return;
+        }
         box.tileY += 1
         
-    } else if(player.body.touching.left && !coordsIn([box.tileX-1, box.tileY], boxes) && !coordsIn([box.tileX-1, box.tileY], walls) && box.tileX-1 >= 0) {
+    } else if(player.body.touching.left) {
+        toMove = search(box, -1, 0, map)
+        if(toMove == null) {
+            return;
+        }
         box.tileX -= 1
         
-    } else if(player.body.touching.right && !coordsIn([box.tileX+1, box.tileY], boxes) && !coordsIn([box.tileX+1, box.tileY], walls) && box.tileX+1 <= tileWidth) {
+    } else if(player.body.touching.right) {
+        toMove = search(box, 1, 0, map)
+        if(toMove == null) {
+            return;
+        }
         box.tileX += 1
         
     } else {
@@ -218,21 +246,32 @@ function coordsIn(coords, group) {
     return false;
 }
 
-function search(box, dx, dy, boxes, walls) {
+function search(box, dx, dy, worldMap) {
     let x = box.tileX;
     let y = box.tileY;
 
-    while (coordsIn([x,y], boxes)) {
+    while (0 <= x && x < tileWidth && 0 <= y && y < tileHeight) {
+        if (worldMap[x][y].texture.key != 'box') {
+            break;
+        }
         x += dx;
         y += dy;
     }
+
+    lastKey = worldMap[x][y].texture.key
     
     if (x < 0 || y < 0 || x >= tileWidth || y >= tileHeight) {
-        return -1;
-    } else if (coordsIn([x,y], walls)) {
-        return -1;
+        return null;
+    } else if (lastKey == 'wall') {
+        return null;
     } else {
-        return [x, y]
+        result = new Array()
+        for (let i = box.tileX + dx; i < x; i++) {
+            for (let j = box.tileY + dy; j < y; j++) {
+                result.push(worldMap[i][j])
+            }
+        }
+        return result;
     }
 }
 
