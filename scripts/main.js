@@ -13,20 +13,17 @@ let config = {
     physics: {
         default: 'arcade',
         arcade: {
-            debug: true,
+            debug: false,
             forceX: true
         }
     },
     scene: [new SokobanLevel('level1', [
-        [3, 1],
-        [3, 3],
-        [2, 2],
-        [4, 2]
+        [6, 6, 10, 10]
     ], [
-        [0, 0, 6, 0],
-        [6, 1, 6, 3],
-        [0, 4, 6, 4],
-        [0, 1, 0, 3],
+        [0, 0, 24, 0],
+        [0, 17, 24, 17],
+        [0, 1, 0, 16],
+        [24, 1, 24, 16],
     ], [3, 2])]
 }
 

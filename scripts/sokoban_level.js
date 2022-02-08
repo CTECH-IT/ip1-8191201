@@ -253,16 +253,6 @@ function playerBoxProcessCallback(player, box) {
     }
 }
 
-function coordsIn(coords, group) {
-    let objs = group.children.entries;
-    for (let i = 0; i < objs.length; i++) {
-        if(objs[i].tileX == coords[0] && objs[i].tileY == coords[1]) {
-            return true;
-        }
-    }
-    return false;
-}
-
 function search(box, dx, dy, worldMap) {
     let x = box.tileX;
     let y = box.tileY;
