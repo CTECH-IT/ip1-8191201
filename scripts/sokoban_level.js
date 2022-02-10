@@ -12,6 +12,8 @@ class SokobanLevel extends Phaser.Scene {
     }
 
     init(nums) {
+        this.worldNum = nums.world;
+        this.levelNum = nums.level;
         let data = levelData[nums.world][nums.level];
 
         this.boxLocations = data.boxLocations;
@@ -28,6 +30,9 @@ class SokobanLevel extends Phaser.Scene {
         this.load.image('goal', 'assets/goal.png');
         this.load.image('goalOverlay', 'assets/goal_overlay.png');
         this.load.image('whiteOverlay', 'assets/white_overlay_50.png');
+        this.load.image('pauseMenu', 'assets/pause_menu.png');
+        this.load.image('leftButton', 'assets/left_arrow.png');
+        this.load.image('rightButton', 'assets/right_arrow.png');
         this.load.spritesheet('ninja',
             'assets/ninjasprite.png',
             { frameWidth: 32, frameHeight: 32, margin: 2, spacing: 2 }
@@ -501,9 +506,20 @@ function search(box, dx, dy, worldMap) {
 }
 
 function levelCompleteHandler(scene) {
-    alert('yay');
     scene.input.keyboard.destroy();
     scene.add.image(400, 288, 'whiteOverlay');
+    scene.add.image(400, 288, 'pauseMenu');
+    let textStyle = {
+        color: 'black',
+        font: 'Arial',
+        boundsAlignH: 'center',
+        boundsAlignV: 'middle'
+    }
+    let text = scene.add.text(400, 288 - 80, 'World ' + scene.worldNum + ': Level ' + scene.levelNum, textStyle).setOrigin(0.5);
+    scene.add.text(400, 288 - 50, 'Complete!', textStyle).setOrigin(0.5);
+    console.log(text);
+    let left = scene.add.image(400 - 100, 288 + 80, 'leftButton');
+    let right = scene.add.image(400 + 100, 288 + 80, 'rightButton');
 }
 
 export default SokobanLevel;
