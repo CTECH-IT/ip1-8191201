@@ -283,7 +283,7 @@ function playerBoxCallback(player, box) {
 
     for (let i = 0; i < boxes.length; i++) {
         if (boxes[i].isMoving) {
-            return;
+            return false;
         }
     }
 
@@ -292,7 +292,9 @@ function playerBoxCallback(player, box) {
             if (map[box.tileX - 1][box.tileY] != null) {
                 if (map[box.tileX - 1][box.tileY].texture.key == 'box') {
                     if (x_diff > 16) {
-                        return playerBoxCallback(player, map[box.tileX - 1][box.tileY]);
+                        if (playerBoxCallback(player, map[box.tileX - 1][box.tileY])) {
+                            return true;
+                        }
                     }
                 }
             }
@@ -300,14 +302,16 @@ function playerBoxCallback(player, box) {
             if (map[box.tileX + 1][box.tileY] != null) {
                 if (map[box.tileX + 1][box.tileY].texture.key == 'box') {
                     if (x_diff > 16) {
-                        return playerBoxCallback(player, map[box.tileX + 1][box.tileY]);
+                        if (playerBoxCallback(player, map[box.tileX + 1][box.tileY])) {
+                            return true;
+                        }
                     }
                 }
             }
         }
         toMove = search(box, 0, -1, map);
         if (toMove == null) {
-            return;
+            return false;
         }
         for (let n = 0; n < toMove.length; n++) {
             let b = toMove[n];
@@ -320,22 +324,26 @@ function playerBoxCallback(player, box) {
             if (map[box.tileX - 1][box.tileY] != null) {
                 if (map[box.tileX - 1][box.tileY].texture.key == 'box') {
                     if (x_diff > 16) {
-                        return playerBoxCallback(player, map[box.tileX - 1][box.tileY]);
+                        if (playerBoxCallback(player, map[box.tileX - 1][box.tileY])) {
+                            return true;
+                        }
                     }
                 }
             }
-        } else {
+        } else if (player.body.center.x > box.body.center.x) {
             if (map[box.tileX + 1][box.tileY] != null) {
                 if (map[box.tileX + 1][box.tileY].texture.key == 'box') {
                     if (x_diff > 16) {
-                        return playerBoxCallback(player, map[box.tileX + 1][box.tileY]);
+                        if (playerBoxCallback(player, map[box.tileX + 1][box.tileY])) {
+                            return true;
+                        }
                     }
                 }
             }
         }
         toMove = search(box, 0, 1, map);
         if (toMove == null) {
-            return;
+            return false;
         }
         for (let n = 0; n < toMove.length; n++) {
             let b = toMove[n];
@@ -348,7 +356,9 @@ function playerBoxCallback(player, box) {
             if (map[box.tileX][box.tileY - 1] != null) {
                 if (map[box.tileX][box.tileY - 1].texture.key == 'box') {
                     if (y_diff > 16) {
-                        return playerBoxCallback(player, map[box.tileX][box.tileY - 1]);
+                        if (playerBoxCallback(player, map[box.tileX][box.tileY - 1])) {
+                            return true;
+                        }
                     }
                 }
             }
@@ -356,14 +366,16 @@ function playerBoxCallback(player, box) {
             if (map[box.tileX][box.tileY + 1] != null) {
                 if (map[box.tileX][box.tileY + 1].texture.key == 'box') {
                     if (y_diff > 16) {
-                        return playerBoxCallback(player, map[box.tileX][box.tileY + 1]);
+                        if (playerBoxCallback(player, map[box.tileX][box.tileY + 1])) {
+                            return true;
+                        }
                     }
                 }
             }
         }
         toMove = search(box, -1, 0, map);
         if (toMove == null) {
-            return;
+            return false;
         }
         for (let n = 0; n < toMove.length; n++) {
             let b = toMove[n];
@@ -376,7 +388,9 @@ function playerBoxCallback(player, box) {
             if (map[box.tileX][box.tileY - 1] != null) {
                 if (map[box.tileX][box.tileY - 1].texture.key == 'box') {
                     if (y_diff > 16) {
-                        return playerBoxCallback(player, map[box.tileX][box.tileY - 1]);
+                        if (playerBoxCallback(player, map[box.tileX][box.tileY - 1])) {
+                            return true;
+                        }
                     }
                 }
             }
@@ -384,14 +398,16 @@ function playerBoxCallback(player, box) {
             if (map[box.tileX][box.tileY + 1] != null) {
                 if (map[box.tileX][box.tileY + 1].texture.key == 'box') {
                     if (y_diff > 16) {
-                        return playerBoxCallback(player, map[box.tileX][box.tileY + 1]);
+                        if (playerBoxCallback(player, map[box.tileX][box.tileY + 1])) {
+                            return true;
+                        }
                     }
                 }
             }
         }
         toMove = search(box, 1, 0, map);
         if (toMove == null) {
-            return;
+            return false;
         }
         for (let n = 0; n < toMove.length; n++) {
             let b = toMove[n];
@@ -400,7 +416,7 @@ function playerBoxCallback(player, box) {
         }
 
     } else {
-        return;
+        return false;
     }
     for (let i = 0; i < toMove.length; i++) {
         let b = toMove[i];
@@ -420,6 +436,7 @@ function playerBoxCallback(player, box) {
             }
         });
     }
+    return true;
 }
 
 function playerBoxProcessCallback(player, box) {
