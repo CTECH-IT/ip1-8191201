@@ -15,7 +15,7 @@ class Menu extends Phaser.Scene {
 
     create() {
 
-        this.scene.start('level', levelData['1-1']);
+        this.scene.start('level', levelData[1][2]);
     }
 
     update() {

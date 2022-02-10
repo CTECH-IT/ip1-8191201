@@ -195,7 +195,7 @@ function makeBoxes(worldMap, group, locations, key) {
             b.tileY = coords[1];
             b.isMoving = false;
             if (worldMap[coords[0]][coords[1]] != null) {
-                throw new EvalError('object already exists at location');
+                throw new EvalError('object already exists at location: (' + coords[0] + ', ' + coords[1] + ')');
             }
             worldMap[coords[0]][coords[1]] = b;
         } else if (coords.length == 4) {
@@ -211,7 +211,7 @@ function makeBoxes(worldMap, group, locations, key) {
                     b.tileY = y;
                     b.isMoving = false;
                     if (worldMap[x][y] != null) {
-                        throw new EvalError('object already exists at location');
+                        throw new EvalError('object already exists at location: (' + x + ', ' + y + ')');
                     }
                     worldMap[x][y] = b;
                 }
