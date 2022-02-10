@@ -3,15 +3,18 @@ let tileHeight = 18;
 
 class SokobanLevel extends Phaser.Scene {
 
-    constructor(name, box_locations, wall_locations, goal_locations, player_start) {
-        super(name);
-        this.box_locations = box_locations;
-        this.wall_locations = wall_locations;
-        this.goal_locations = goal_locations;
-        this.player_start = player_start;
+    constructor() {
+        super('level');
 
         this.completed = false;
     }
+
+    init(data) {
+        this.boxLocations = data.boxLocations;
+        this.wallLocations = data.wallLocations;
+        this.goalLocations = data.goalLocations;
+        this.playerStart = data.playerStart;
+    } 
 
     preload() {
         this.load.image('sky', 'assets/sky.png');
@@ -19,7 +22,7 @@ class SokobanLevel extends Phaser.Scene {
         this.load.image('box', 'assets/box.png');
         this.load.image('wall', 'assets/wall_red.png');
         this.load.image('goal', 'assets/goal.png');
-        this.load.image('goal_overlay', 'assets/goal_overlay.png');
+        this.load.image('goalOverlay', 'assets/goal_overlay.png');
         this.load.spritesheet('ninja',
             'assets/ninjasprite.png',
             { frameWidth: 32, frameHeight: 32, margin: 2, spacing: 2 }
@@ -29,34 +32,34 @@ class SokobanLevel extends Phaser.Scene {
     create() {
         this.add.image(400, 288, 'floor');
 
-        let box_config = {
+        let boxConfig = {
             collideWorldBounds: true
         };
 
         this.worldMap = Array.from(Array(tileWidth), () => new Array(tileHeight));
         let worldMap = this.worldMap;
 
-        this.boxes = this.physics.add.group(box_config);
+        this.boxes = this.physics.add.group(boxConfig);
         let boxes = this.boxes;
-        let box_locations = this.box_locations;
+        let boxLocations = this.boxLocations;
 
-        this.walls = this.physics.add.group(box_config);
+        this.walls = this.physics.add.group(boxConfig);
         let walls = this.walls;
-        let wall_locations = this.wall_locations;
+        let wallLocations = this.wallLocations;
 
-        this.goals = this.physics.add.group(box_config);
-        this.goal_overlays = this.physics.add.group(box_config);
+        this.goals = this.physics.add.group(boxConfig);
+        this.goalOverlays = this.physics.add.group(boxConfig);
         let goals = this.goals;
-        let goal_overlays = this.goal_overlays;
-        let goal_locations = this.goal_locations;
-        makeGoals(worldMap, goals, goal_locations, 'goal');
+        let goalOverlays = this.goalOverlays;
+        let goalLocations = this.goalLocations;
+        makeGoals(worldMap, goals, goalLocations, 'goal');
 
-        makeBoxes(worldMap, boxes, box_locations, 'box');
-        makeBoxes(worldMap, walls, wall_locations, 'wall');
+        makeBoxes(worldMap, boxes, boxLocations, 'box');
+        makeBoxes(worldMap, walls, wallLocations, 'wall');
 
-        makeOverlays(goal_overlays, goal_locations, 'goal_overlay');
+        makeOverlays(goalOverlays, goalLocations, 'goalOverlay');
 
-        this.player = this.physics.add.sprite(this.player_start[0] * 32 + 16, this.player_start[1] * 32 + 16, 'ninja');
+        this.player = this.physics.add.sprite(this.playerStart[0] * 32 + 16, this.playerStart[1] * 32 + 16, 'ninja');
         let player = this.player;
 
         player.setBounce(0);
@@ -196,12 +199,12 @@ function makeBoxes(worldMap, group, locations, key) {
             }
             worldMap[coords[0]][coords[1]] = b;
         } else if (coords.length == 4) {
-            let x_min = Math.min(coords[0], coords[2]);
-            let x_max = Math.max(coords[0], coords[2]);
-            let y_min = Math.min(coords[1], coords[3]);
-            let y_max = Math.max(coords[1], coords[3]);
-            for (let x = x_min; x <= x_max; x++) {
-                for (let y = y_min; y <= y_max; y++) {
+            let xMin = Math.min(coords[0], coords[2]);
+            let xMax = Math.max(coords[0], coords[2]);
+            let yMin = Math.min(coords[1], coords[3]);
+            let yMax = Math.max(coords[1], coords[3]);
+            for (let x = xMin; x <= xMax; x++) {
+                for (let y = yMin; y <= yMax; y++) {
                     let b = group.create(x * 32 + 16, y * 32 + 16, key);
                     b.setImmovable(true);
                     b.tileX = x;
@@ -229,12 +232,12 @@ function makeGoals(worldMap, group, locations, key) {
                 throw new EvalError('object already exists at location');
             }
         } else if (coords.length == 4) {
-            let x_min = Math.min(coords[0], coords[2]);
-            let x_max = Math.max(coords[0], coords[2]);
-            let y_min = Math.min(coords[1], coords[3]);
-            let y_max = Math.max(coords[1], coords[3]);
-            for (let x = x_min; x <= x_max; x++) {
-                for (let y = y_min; y <= y_max; y++) {
+            let xMin = Math.min(coords[0], coords[2]);
+            let xMax = Math.max(coords[0], coords[2]);
+            let yMin = Math.min(coords[1], coords[3]);
+            let yMax = Math.max(coords[1], coords[3]);
+            for (let x = xMin; x <= xMax; x++) {
+                for (let y = yMin; y <= yMax; y++) {
                     let b = group.create(x * 32 + 16, y * 32 + 16, key);
                     b.setImmovable(true);
                     b.tileX = x;
@@ -257,12 +260,12 @@ function makeOverlays(group, locations, key) {
             b.tileX = coords[0];
             b.tileY = coords[1];
         } else if (coords.length == 4) {
-            let x_min = Math.min(coords[0], coords[2]);
-            let x_max = Math.max(coords[0], coords[2]);
-            let y_min = Math.min(coords[1], coords[3]);
-            let y_max = Math.max(coords[1], coords[3]);
-            for (let x = x_min; x <= x_max; x++) {
-                for (let y = y_min; y <= y_max; y++) {
+            let xMin = Math.min(coords[0], coords[2]);
+            let xMax = Math.max(coords[0], coords[2]);
+            let yMin = Math.min(coords[1], coords[3]);
+            let yMax = Math.max(coords[1], coords[3]);
+            for (let x = xMin; x <= xMax; x++) {
+                for (let y = yMin; y <= yMax; y++) {
                     let b = group.create(x * 32 + 16, y * 32 + 16, key);
                     b.setImmovable(true);
                     b.tileX = x;
@@ -278,8 +281,8 @@ function playerBoxCallback(player, box) {
     let toMove = box;
     let boxes = box.scene.boxes.children.entries;
 
-    let x_diff = Math.abs(player.body.center.x - box.body.center.x);
-    let y_diff = Math.abs(player.body.center.y - box.body.center.y);
+    let xDiff = Math.abs(player.body.center.x - box.body.center.x);
+    let yDiff = Math.abs(player.body.center.y - box.body.center.y);
 
     for (let i = 0; i < boxes.length; i++) {
         if (boxes[i].isMoving) {
@@ -291,7 +294,7 @@ function playerBoxCallback(player, box) {
         if (player.body.center.x < box.body.center.x) {
             if (map[box.tileX - 1][box.tileY] != null) {
                 if (map[box.tileX - 1][box.tileY].texture.key == 'box') {
-                    if (x_diff > 16) {
+                    if (xDiff > 16) {
                         if (playerBoxCallback(player, map[box.tileX - 1][box.tileY])) {
                             return true;
                         }
@@ -301,7 +304,7 @@ function playerBoxCallback(player, box) {
         } else if (player.body.center.x > box.body.center.x) {
             if (map[box.tileX + 1][box.tileY] != null) {
                 if (map[box.tileX + 1][box.tileY].texture.key == 'box') {
-                    if (x_diff > 16) {
+                    if (xDiff > 16) {
                         if (playerBoxCallback(player, map[box.tileX + 1][box.tileY])) {
                             return true;
                         }
@@ -323,7 +326,7 @@ function playerBoxCallback(player, box) {
         if (player.body.center.x < box.body.center.x) {
             if (map[box.tileX - 1][box.tileY] != null) {
                 if (map[box.tileX - 1][box.tileY].texture.key == 'box') {
-                    if (x_diff > 16) {
+                    if (xDiff > 16) {
                         if (playerBoxCallback(player, map[box.tileX - 1][box.tileY])) {
                             return true;
                         }
@@ -333,7 +336,7 @@ function playerBoxCallback(player, box) {
         } else if (player.body.center.x > box.body.center.x) {
             if (map[box.tileX + 1][box.tileY] != null) {
                 if (map[box.tileX + 1][box.tileY].texture.key == 'box') {
-                    if (x_diff > 16) {
+                    if (xDiff > 16) {
                         if (playerBoxCallback(player, map[box.tileX + 1][box.tileY])) {
                             return true;
                         }
@@ -355,7 +358,7 @@ function playerBoxCallback(player, box) {
         if (player.body.center.y < box.body.center.y) {
             if (map[box.tileX][box.tileY - 1] != null) {
                 if (map[box.tileX][box.tileY - 1].texture.key == 'box') {
-                    if (y_diff > 16) {
+                    if (yDiff > 16) {
                         if (playerBoxCallback(player, map[box.tileX][box.tileY - 1])) {
                             return true;
                         }
@@ -365,7 +368,7 @@ function playerBoxCallback(player, box) {
         } else {
             if (map[box.tileX][box.tileY + 1] != null) {
                 if (map[box.tileX][box.tileY + 1].texture.key == 'box') {
-                    if (y_diff > 16) {
+                    if (yDiff > 16) {
                         if (playerBoxCallback(player, map[box.tileX][box.tileY + 1])) {
                             return true;
                         }
@@ -387,7 +390,7 @@ function playerBoxCallback(player, box) {
         if (player.body.center.y < box.body.center.y) {
             if (map[box.tileX][box.tileY - 1] != null) {
                 if (map[box.tileX][box.tileY - 1].texture.key == 'box') {
-                    if (y_diff > 16) {
+                    if (yDiff > 16) {
                         if (playerBoxCallback(player, map[box.tileX][box.tileY - 1])) {
                             return true;
                         }
@@ -397,7 +400,7 @@ function playerBoxCallback(player, box) {
         } else {
             if (map[box.tileX][box.tileY + 1] != null) {
                 if (map[box.tileX][box.tileY + 1].texture.key == 'box') {
-                    if (y_diff > 16) {
+                    if (yDiff > 16) {
                         if (playerBoxCallback(player, map[box.tileX][box.tileY + 1])) {
                             return true;
                         }
