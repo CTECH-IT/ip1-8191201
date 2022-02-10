@@ -27,6 +27,7 @@ class SokobanLevel extends Phaser.Scene {
         this.load.image('wall', 'assets/wall_red.png');
         this.load.image('goal', 'assets/goal.png');
         this.load.image('goalOverlay', 'assets/goal_overlay.png');
+        this.load.image('whiteOverlay', 'assets/white_overlay_50.png');
         this.load.spritesheet('ninja',
             'assets/ninjasprite.png',
             { frameWidth: 32, frameHeight: 32, margin: 2, spacing: 2 }
@@ -503,7 +504,7 @@ function search(box, dx, dy, worldMap) {
 function levelCompleteHandler(scene) {
     scene.input.keyboard.destroy();
 
-    //scene.add.image('floor', 400, 288);
+    scene.add.image(400, 288, 'whiteOverlay');
 }
 
 export default SokobanLevel;
