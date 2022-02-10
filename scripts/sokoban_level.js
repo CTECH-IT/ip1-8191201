@@ -11,18 +11,24 @@ class SokobanLevel extends Phaser.Scene {
         this.completed = false;
     }
 
-    init(nums) {
-        this.worldNum = nums.world;
-        this.levelNum = nums.level;
-        let data = levelData[nums.world][nums.level];
+    init(data) {
 
-        this.boxLocations = data.boxLocations;
-        this.wallLocations = data.wallLocations;
-        this.goalLocations = data.goalLocations;
-        this.playerStart = data.playerStart;
+        // retrieve level data for object placement
+        this.worldNum = data.world;
+        this.levelNum = data.level;
+        let level = levelData[this.worldNum][this.levelNum];
+
+        // store data for later usage
+        this.boxLocations = level.boxLocations;
+        this.wallLocations = level.wallLocations;
+        this.goalLocations = level.goalLocations;
+        this.playerStart = level.playerStart;
+        this.shift = level.shift;
     }
 
     preload() {
+
+        // load all sprites
         this.load.image('sky', 'assets/sky.png');
         this.load.image('floor', 'assets/floor.png');
         this.load.image('box', 'assets/box.png');
@@ -30,6 +36,7 @@ class SokobanLevel extends Phaser.Scene {
         this.load.image('goal', 'assets/goal.png');
         this.load.image('goalOverlay', 'assets/goal_overlay.png');
         this.load.image('whiteOverlay', 'assets/white_overlay_50.png');
+        this.load.image('star', 'assets/star.png');
         this.load.image('pauseMenu', 'assets/pause_menu.png');
         this.load.image('leftButton', 'assets/left_arrow.png');
         this.load.image('rightButton', 'assets/right_arrow.png');
@@ -46,9 +53,11 @@ class SokobanLevel extends Phaser.Scene {
             collideWorldBounds: true
         };
 
+        // 2d array to store object locations
         this.worldMap = Array.from(Array(tileWidth), () => new Array(tileHeight));
         let worldMap = this.worldMap;
 
+        // initiate physics groups and coordinate data for boxes, walls, goals, and goal overlays
         this.boxes = this.physics.add.group(boxConfig);
         let boxes = this.boxes;
         let boxLocations = this.boxLocations;
@@ -62,53 +71,49 @@ class SokobanLevel extends Phaser.Scene {
         let goals = this.goals;
         let goalOverlays = this.goalOverlays;
         let goalLocations = this.goalLocations;
-        makeGoals(worldMap, goals, goalLocations, 'goal');
 
-        makeBoxes(worldMap, boxes, boxLocations, 'box');
-        makeBoxes(worldMap, walls, wallLocations, 'wall');
+        let shift = this.shift;
 
-        makeOverlays(goalOverlays, goalLocations, 'goalOverlay');
+        // make objects in the correct order; display overlays over boxes but under player
+        makeGoals(worldMap, goals, goalLocations, shift, 'goal');
+        makeBoxes(worldMap, boxes, boxLocations, shift, 'box');
+        makeBoxes(worldMap, walls, wallLocations, shift, 'wall');
+        makeOverlays(goalOverlays, goalLocations, shift, 'goalOverlay');
 
-        this.player = this.physics.add.sprite(this.playerStart[0] * 32 + 16, this.playerStart[1] * 32 + 16, 'ninja');
+        // create player sprite and define bounding box & properties
+        this.player = this.physics.add.sprite((this.playerStart[0]+shift[0]) * 32 + 16, (this.playerStart[1]+shift[1]) * 32 + 16, 'ninja');
         let player = this.player;
-
         player.setBounce(0);
         player.setCollideWorldBounds(true);
         player.body.setSize(18, 16, true);
         player.body.setOffset(7, 12);
+
+        // colliders handle collisions between objects
+        // special case for player-box collisions to handle grid-based movement
         this.physics.add.collider(player, boxes, playerBoxCallback, playerBoxProcessCallback);
         this.physics.add.collider(player, walls);
         this.physics.add.collider(boxes, boxes);
         this.physics.add.collider(boxes, walls);
 
-        this.anims.create({
-            key: 'idle',
-            frames: this.anims.generateFrameNumbers('ninja', { start: 0, end: 0 }),
-            frameRate: 10,
-            repeat: -1
-        });
-
+        // create animations
         this.anims.create({
             key: 'down',
             frames: this.anims.generateFrameNumbers('ninja', { start: 0, end: 3 }),
             frameRate: 10,
             repeat: -1
         });
-
         this.anims.create({
             key: 'up',
             frames: this.anims.generateFrameNumbers('ninja', { start: 4, end: 7 }),
             frameRate: 10,
             repeat: -1
         });
-
         this.anims.create({
             key: 'left',
             frames: this.anims.generateFrameNumbers('ninja', { start: 8, end: 11 }),
             frameRate: 10,
             repeat: -1
         });
-
         this.anims.create({
             key: 'right',
             frames: this.anims.generateFrameNumbers('ninja', { start: 12, end: 15 }),
@@ -116,7 +121,7 @@ class SokobanLevel extends Phaser.Scene {
             repeat: -1
         });
 
-
+        // create input listeners
         this.cursors = this.input.keyboard.createCursorKeys();
         this.keys = this.input.keyboard.addKeys({ up: 'W', left: 'A', down: 'S', right: 'D', reset: 'R' });
     }
@@ -198,19 +203,19 @@ class SokobanLevel extends Phaser.Scene {
     }
 }
 
-function makeBoxes(worldMap, group, locations, key) {
+function makeBoxes(worldMap, group, locations, shift, key) {
     for (let i = 0; i < locations.length; i++) {
         let coords = locations[i];
         if (coords.length == 2) {
-            let b = group.create(coords[0] * 32 + 16, coords[1] * 32 + 16, key);
+            let b = group.create((coords[0]+shift[0]) * 32 + 16, (coords[1]+shift[1]) * 32 + 16, key);
             b.setImmovable(true);
-            b.tileX = coords[0];
-            b.tileY = coords[1];
+            b.tileX = coords[0]+shift[0];
+            b.tileY = coords[1]+shift[1];
             b.isMoving = false;
-            if (worldMap[coords[0]][coords[1]] != null) {
+            if (worldMap[coords[0]+shift[0]][coords[1]+shift[1]] != null) {
                 throw new EvalError('object already exists at location: (' + coords[0] + ', ' + coords[1] + ')');
             }
-            worldMap[coords[0]][coords[1]] = b;
+            worldMap[coords[0]+shift[0]][coords[1]+shift[1]] = b;
         } else if (coords.length == 4) {
             let xMin = Math.min(coords[0], coords[2]);
             let xMax = Math.max(coords[0], coords[2]);
@@ -218,30 +223,30 @@ function makeBoxes(worldMap, group, locations, key) {
             let yMax = Math.max(coords[1], coords[3]);
             for (let x = xMin; x <= xMax; x++) {
                 for (let y = yMin; y <= yMax; y++) {
-                    let b = group.create(x * 32 + 16, y * 32 + 16, key);
+                    let b = group.create((x+shift[0]) * 32 + 16, (y+shift[1]) * 32 + 16, key);
                     b.setImmovable(true);
-                    b.tileX = x;
-                    b.tileY = y;
+                    b.tileX = x+shift[0];
+                    b.tileY = y+shift[1];
                     b.isMoving = false;
-                    if (worldMap[x][y] != null) {
+                    if (worldMap[x+shift[0]][y+shift[1]] != null) {
                         throw new EvalError('object already exists at location: (' + x + ', ' + y + ')');
                     }
-                    worldMap[x][y] = b;
+                    worldMap[x+shift[0]][y+shift[1]] = b;
                 }
             }
         }
     }
 }
 
-function makeGoals(worldMap, group, locations, key) {
+function makeGoals(worldMap, group, locations, shift, key) {
     for (let i = 0; i < locations.length; i++) {
         let coords = locations[i];
         if (coords.length == 2) {
-            let b = group.create(coords[0] * 32 + 16, coords[1] * 32 + 16, key);
+            let b = group.create((coords[0]+shift[0]) * 32 + 16, (coords[1]+shift[1]) * 32 + 16, key);
             b.setImmovable(true);
-            b.tileX = coords[0];
-            b.tileY = coords[1];
-            if (worldMap[coords[0]][coords[1]] != null) {
+            b.tileX = coords[0]+shift[0];
+            b.tileY = coords[1]+shift[1];
+            if (worldMap[coords[0]+shift[0]][coords[1]+shift[1]] != null) {
                 throw new EvalError('object already exists at location');
             }
         } else if (coords.length == 4) {
@@ -251,11 +256,11 @@ function makeGoals(worldMap, group, locations, key) {
             let yMax = Math.max(coords[1], coords[3]);
             for (let x = xMin; x <= xMax; x++) {
                 for (let y = yMin; y <= yMax; y++) {
-                    let b = group.create(x * 32 + 16, y * 32 + 16, key);
+                    let b = group.create((x+shift[0]) * 32 + 16, (y+shift[1]) * 32 + 16, key);
                     b.setImmovable(true);
-                    b.tileX = x;
-                    b.tileY = y;
-                    if (worldMap[x][y] != null) {
+                    b.tileX = x+shift[0];
+                    b.tileY = y+shift[1];
+                    if (worldMap[x+shift[0]][y+shift[1]] != null) {
                         throw new EvalError('object already exists at location');
                     }
                 }
@@ -264,14 +269,14 @@ function makeGoals(worldMap, group, locations, key) {
     }
 }
 
-function makeOverlays(group, locations, key) {
+function makeOverlays(group, locations, shift, key) {
     for (let i = 0; i < locations.length; i++) {
         let coords = locations[i];
         if (coords.length == 2) {
-            let b = group.create(coords[0] * 32 + 16, coords[1] * 32 + 16, key);
+            let b = group.create((coords[0]+shift[0]) * 32 + 16, (coords[1]+shift[1]) * 32 + 16, key);
             b.setImmovable(true);
-            b.tileX = coords[0];
-            b.tileY = coords[1];
+            b.tileX = coords[0]+shift[0];
+            b.tileY = coords[1]+shift[1];
         } else if (coords.length == 4) {
             let xMin = Math.min(coords[0], coords[2]);
             let xMax = Math.max(coords[0], coords[2]);
@@ -279,10 +284,10 @@ function makeOverlays(group, locations, key) {
             let yMax = Math.max(coords[1], coords[3]);
             for (let x = xMin; x <= xMax; x++) {
                 for (let y = yMin; y <= yMax; y++) {
-                    let b = group.create(x * 32 + 16, y * 32 + 16, key);
+                    let b = group.create((x+shift[0]) * 32 + 16, (y+shift[1]) * 32 + 16, key);
                     b.setImmovable(true);
-                    b.tileX = x;
-                    b.tileY = y;
+                    b.tileX = x+shift[0];
+                    b.tileY = y+shift[1];
                 }
             }
         }
@@ -506,20 +511,72 @@ function search(box, dx, dy, worldMap) {
 }
 
 function levelCompleteHandler(scene) {
-    scene.input.keyboard.destroy();
+    //scene.input.keyboard.destroy();
     scene.add.image(400, 288, 'whiteOverlay');
     scene.add.image(400, 288, 'pauseMenu');
     let textStyle = {
         color: 'black',
-        font: 'Arial',
+        //fontFamily: 'Courier',
+        fontSize: '32px',
         boundsAlignH: 'center',
         boundsAlignV: 'middle'
     }
-    let text = scene.add.text(400, 288 - 80, 'World ' + scene.worldNum + ': Level ' + scene.levelNum, textStyle).setOrigin(0.5);
-    scene.add.text(400, 288 - 50, 'Complete!', textStyle).setOrigin(0.5);
-    console.log(text);
-    let left = scene.add.image(400 - 100, 288 + 80, 'leftButton');
-    let right = scene.add.image(400 + 100, 288 + 80, 'rightButton');
+    scene.add.text(400, 288 - 80, 'World ' + scene.worldNum + ': Level ' + scene.levelNum, textStyle).setOrigin(0.5);
+    scene.add.text(400, 288 - 40, 'Complete!', textStyle).setOrigin(0.5);
+
+    let star = scene.add.image(400, 288, 'star');
+    star.alpha = 0;
+    scene.tweens.add({
+        targets: star,
+        alpha: 1,
+        angle: 360,
+        duration: 2000,
+        ease: 'Power2',
+        onComplete: function (tween, targets) {
+            for (let i = 0; i < targets.length; i++) {
+                targets[i].isMoving = false;
+            }
+        }
+    });
+
+    if (scene.levelNum > 1) {
+        let left = scene.add.image(400 - 100, 288 + 80, 'leftButton');
+        left.setInteractive();
+        left.on('pointerdown', function(pointer) {
+            let scene = pointer.manager.game.scene;
+            let sokobanLevel = scene.keys['level'];
+            
+            let worldNum = sokobanLevel.worldNum;
+            let levelNum = sokobanLevel.levelNum;
+
+            scene.stop('level');
+            scene.remove('level');
+            scene.add('level', SokobanLevel, true, {
+                world: worldNum,
+                level: levelNum - 1
+            });
+        });
+    }
+
+    if (scene.levelNum < 8) {
+        let right = scene.add.image(400 + 100, 288 + 80, 'rightButton');
+        right.setInteractive();
+        right.on('pointerdown', function(pointer) {
+            let scene = pointer.manager.game.scene;
+            let sokobanLevel = scene.keys['level'];
+            
+            let worldNum = sokobanLevel.worldNum;
+            let levelNum = sokobanLevel.levelNum;
+
+            scene.stop('level');
+            scene.remove('level');
+            scene.add('level', SokobanLevel, true, {
+                world: worldNum,
+                level: levelNum + 1
+            });
+        });
+    }
+    
 }
 
 export default SokobanLevel;
