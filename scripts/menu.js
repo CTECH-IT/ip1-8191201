@@ -15,7 +15,7 @@ class Menu extends Phaser.Scene {
 
         this.scene.start('level', {
             world: 1,
-            level: 2
+            level: 1
         });
     }
 
