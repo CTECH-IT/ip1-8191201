@@ -1,3 +1,5 @@
+import levelData from "./levels.js";
+
 let tileWidth = 25;
 let tileHeight = 18;
 
@@ -9,12 +11,14 @@ class SokobanLevel extends Phaser.Scene {
         this.completed = false;
     }
 
-    init(data) {
+    init(nums) {
+        let data = levelData[nums.world][nums.level];
+
         this.boxLocations = data.boxLocations;
         this.wallLocations = data.wallLocations;
         this.goalLocations = data.goalLocations;
         this.playerStart = data.playerStart;
-    } 
+    }
 
     preload() {
         this.load.image('sky', 'assets/sky.png');
@@ -105,11 +109,15 @@ class SokobanLevel extends Phaser.Scene {
             frameRate: 10,
             repeat: -1
         });
+
+
+        this.cursors = this.input.keyboard.createCursorKeys();
+        this.keys = this.input.keyboard.addKeys({ up: 'W', left: 'A', down: 'S', right: 'D', reset: 'R' });
     }
 
     update() {
-        let cursors = this.input.keyboard.createCursorKeys();
-        let keys = this.input.keyboard.addKeys({ up: 'W', left: 'A', down: 'S', right: 'D', reset: 'R' });
+        let cursors = this.cursors;
+        let keys = this.keys;
         let move = false;
         let player = this.player;
 
@@ -180,7 +188,7 @@ class SokobanLevel extends Phaser.Scene {
         if (complete && !this.completed) {
             this.completed = true;
             alert('yay');
-            levelCompleteHandler();
+            levelCompleteHandler(this);
         }
     }
 }
@@ -492,7 +500,10 @@ function search(box, dx, dy, worldMap) {
     }
 }
 
-function levelCompleteHandler() {
+function levelCompleteHandler(scene) {
+    scene.input.keyboard.destroy();
+
+    //scene.add.image('floor', 400, 288);
 }
 
 export default SokobanLevel;

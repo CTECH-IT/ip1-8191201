@@ -1,5 +1,3 @@
-import levelData from "./levels.js"
-
 class Menu extends Phaser.Scene {
     constructor() {
         super('menu');
@@ -15,7 +13,10 @@ class Menu extends Phaser.Scene {
 
     create() {
 
-        this.scene.start('level', levelData[1][2]);
+        this.scene.start('level', {
+            world: 1,
+            level: 1
+        });
     }
 
     update() {
