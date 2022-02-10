@@ -188,7 +188,6 @@ class SokobanLevel extends Phaser.Scene {
 
         if (complete && !this.completed) {
             this.completed = true;
-            alert('yay');
             levelCompleteHandler(this);
         }
     }
@@ -502,8 +501,8 @@ function search(box, dx, dy, worldMap) {
 }
 
 function levelCompleteHandler(scene) {
+    alert('yay');
     scene.input.keyboard.destroy();
-
     scene.add.image(400, 288, 'whiteOverlay');
 }
 
