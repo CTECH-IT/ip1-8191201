@@ -150,6 +150,7 @@ function createInteractives(scene) {
             loadLevel = storedLevel;
         }
 
+        scene.stop('menu')
         scene.start('level', {
             world: loadWorld,
             level: loadLevel
@@ -163,6 +164,7 @@ function createInteractives(scene) {
     levelSelect.setInteractive();
     levelSelect.on('pointerdown', function (pointer) {
         let scene = pointer.manager.game.scene;
+        scene.stop('menu')
         scene.start('select', {
             loadNum: localStorage.getItem('world')
         });

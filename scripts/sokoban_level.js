@@ -39,6 +39,7 @@ class SokobanLevel extends Phaser.Scene {
         this.load.image('whiteOverlay', 'assets/white_overlay_50.png');
         this.load.image('star', 'assets/star.png');
         this.load.image('pauseMenu', 'assets/pause_menu.png');
+        this.load.image('levelSelect', 'assets/level_select.png');
         this.load.image('leftButton', 'assets/left_arrow.png');
         this.load.image('rightButton', 'assets/right_arrow.png');
         this.load.spritesheet('ninja',
@@ -172,7 +173,10 @@ class SokobanLevel extends Phaser.Scene {
                 this.scene.restart();
             }
             if (keys.esc.isDown) {
-                this.scene.start('menu');
+                this.scene.stop('level')
+                this.scene.start('select', {
+                    loadNum: this.worldNum
+                });
             }
         }
 
@@ -440,9 +444,6 @@ function levelCompleteHandler(scene) {
             let scene = pointer.manager.game.scene;
             let sokobanLevel = scene.keys['level'];
 
-            let worldNum = sokobanLevel.worldNum;
-            let levelNum = sokobanLevel.levelNum;
-
             scene.stop('level');
             scene.remove('level');
             scene.add('level', SokobanLevel, true, previous);
@@ -458,14 +459,25 @@ function levelCompleteHandler(scene) {
             let scene = pointer.manager.game.scene;
             let sokobanLevel = scene.keys['level'];
 
-            let worldNum = sokobanLevel.worldNum;
-            let levelNum = sokobanLevel.levelNum;
-
             scene.stop('level');
             scene.remove('level');
             scene.add('level', SokobanLevel, true, next);
         });
     }
+
+    // level select button
+    let select = scene.add.image(400, 288+180, 'levelSelect');
+    select.setInteractive();
+    select.on('pointerdown', function (pointer) {
+        let scene = pointer.manager.game.scene;
+        let sokobanLevel = scene.keys['level'];
+        let worldNum = sokobanLevel.worldNum;
+
+        scene.stop('level');
+        scene.start('select', {
+            loadNum: worldNum
+        });
+    });
 }
 
 export default SokobanLevel;

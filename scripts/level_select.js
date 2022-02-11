@@ -69,6 +69,7 @@ class LevelSelect extends Phaser.Scene {
 
     update() {
         if (this.keys.esc.isDown) {
+            this.scene.stop('select');
             this.scene.start('menu');
         }
 
@@ -129,9 +130,10 @@ function makeLevels(scene) {
                 if (rect.x <= pointer.x && pointer.x <= rect.x+rect.width && 
                     rect.y <= pointer.y && pointer.y <= rect.y+rect.height &&
                     currentBox.available) {
-                    scene.start('level', {
-                        world: currentBox.worldNum,
-                        level: currentBox.levelNum
+                        scene.stop('select')
+                        scene.start('level', {
+                            world: currentBox.worldNum,
+                            level: currentBox.levelNum
                     });
                     break;
                 }
