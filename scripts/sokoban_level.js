@@ -87,6 +87,7 @@ class SokobanLevel extends Phaser.Scene {
         player.setCollideWorldBounds(true);
         player.body.setSize(18, 16, true);
         player.body.setOffset(7, 12);
+        player.moveHistory = []; // track move direction history for better handling of arrow controls
 
         // colliders handle collisions between objects
         // special case for player-box collisions to handle grid-based movement
@@ -129,73 +130,67 @@ class SokobanLevel extends Phaser.Scene {
     update() {
         let cursors = this.cursors;
         let keys = this.keys;
-        let move = false;
         let player = this.player;
+        let moveHistory = player.moveHistory;
+        let dirs = ['up', 'down', 'left', 'right'];
 
-        let m = {
-            left: cursors.left.isDown || keys.left.isDown,
-            right: cursors.right.isDown || keys.right.isDown,
-            up: cursors.up.isDown || keys.up.isDown,
-            down: cursors.down.isDown || keys.down.isDown,
-        };
-        m.horiz = m.left || m.right;
-        m.vert = m.up || m.down;
-        m.move = m.horiz || m.vert;
-
-        if (m.left && !m.vert) {
-            player.setVelocityX(-100);
-            player.anims.play('left', true);
-            move = true;
-        }
-        else if (m.right && !m.vert) {
-            player.setVelocityX(100);
-            player.anims.play('right', true);
-            move = true;
-        }
-        else {
-            player.setVelocityX(0);
+        // update move history by iterating through possible directions
+        for (let i = 0; i < dirs.length; i++) {
+            let d = dirs[i];
+            if (cursors[d].isDown || keys[d].isDown) { // if corresponding key is down, push direction to array
+                if (moveHistory.indexOf(d) == -1) {
+                    moveHistory.push(d);
+                }
+            } else { // if corresponding key is not down, remove direction from history
+                let ind = moveHistory.indexOf(d);
+                if (ind >= 0) {
+                    moveHistory.splice(ind, 1);
+                }
+            }
         }
 
-        if (m.up && !m.horiz) {
-            player.setVelocityY(-100);
-            player.anims.play('up', true);
-            move = true;
-        }
-        else if (m.down && !m.horiz) {
-            player.setVelocityY(100);
-            player.anims.play('down', true);
-            move = true;
-        }
-        else {
-            player.setVelocityY(0);
-        }
+        // access the most recent move direction
+        let dir = moveHistory[moveHistory.length - 1];
 
-        if (!m.move || m.horiz && m.vert) {
-            player.anims.stop();
-        }
+        if (!this.completed) {
+            // directional movement
+            if (dir != undefined) {
+                let x = dir == 'left' ? -1 : dir == 'right'? 1 : 0;
+                let y = dir == 'up' ? -1 : dir == 'down'? 1 : 0;
+                player.setVelocityX(x * 100);
+                player.setVelocityY(y * 100);
+                player.anims.play(dir, true);
+            } else {
+                player.setVelocityX(0);
+                player.setVelocityY(0);
+                player.anims.stop();
+            }
 
-        if (keys.reset.isDown) {
-            this.scene.restart();
+            // restart keybind
+            if (keys.reset.isDown) {
+                this.scene.restart();
+            }
         }
-
+        
+        // iterate through goals, check for level complete
         let goals = this.goals.children.entries;
         let complete = true;
-
         for (let i = 0; i < goals.length; i++) {
             let goal = goals[i];
             let worldTile = this.worldMap[goal.tileX][goal.tileY];
-            if (worldTile == null) {
+            if (worldTile == null) { // if no object is located at goal coords, level is not complete
                 complete = false;
                 break;
-            } else if (worldTile.texture.key != 'box') {
+            } else if (worldTile.texture.key != 'box') { // goals must have a box in that location
                 complete = false;
                 break;
-            } else if (worldTile.isMoving == true) {
+            } else if (worldTile.isMoving == true) { // don't complete until all boxes are done moving
                 complete = false;
                 break;
             }
         }
 
+        // only run levelCompleteHandler once upon completion
         if (complete && !this.completed) {
             this.completed = true;
             levelCompleteHandler(this);
