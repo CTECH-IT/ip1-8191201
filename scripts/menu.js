@@ -57,6 +57,16 @@ class Menu extends Phaser.Scene {
         this.charSelect = this.add.sprite(665, 358, 'characterSelect');
         this.charSelect.alpha = 0;
 
+        let style = {
+            color: 'black',
+            fontFamily: 'monospace',
+            fontSize: '16px',
+            boundsAlignH: 'center',
+            boundsAlignV: 'middle'
+        }
+        this.infoMessage = this.add.text(400, 528, 'Use the \'R\' key to reset a level, and \'ESC\' to go back a menu.', style).setOrigin(0.5);
+        this.infoMessage.alpha = 0;
+
         // create anims for all ninjas
         for (let i = 0; i < ninjas.length; i++) {
             let ninja = ninjas[i];
@@ -80,7 +90,7 @@ class Menu extends Phaser.Scene {
             onComplete: function (tween, targets) {
                 let scene = tween.parent.scene;
                 tween.parent.add({
-                    targets: [scene.levelSelect, scene.credits, scene.playButton, scene.charDisplay, scene.charSelect],
+                    targets: [scene.levelSelect, scene.credits, scene.playButton, scene.charDisplay, scene.charSelect, scene.infoMessage],
                     alpha: 1,
                     duration: 500,
                     ease: 'Power0',
@@ -164,9 +174,13 @@ function createInteractives(scene) {
     levelSelect.setInteractive();
     levelSelect.on('pointerdown', function (pointer) {
         let scene = pointer.manager.game.scene;
+        let loadNum = localStorage.getItem('world');
+        if (loadNum == null) {
+            loadNum = 1;
+        }
         scene.stop('menu')
         scene.start('select', {
-            loadNum: localStorage.getItem('world')
+            loadNum: loadNum
         });
     });
 }

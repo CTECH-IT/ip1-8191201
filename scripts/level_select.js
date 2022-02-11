@@ -26,6 +26,9 @@ class LevelSelect extends Phaser.Scene {
             this.levelNum = parseInt(storedLevel);
         }
 
+        localStorage.setItem('world', this.worldNum)
+        localStorage.setItem('level', this.levelNum)
+
         // loadNum is the number of the world to load
         this.loadNum = data.loadNum;
 
