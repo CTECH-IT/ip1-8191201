@@ -7,7 +7,7 @@ class LevelSelect extends Phaser.Scene {
 
     init(data) {
 
-        // attempy to get stored world / level
+        // attempt to get stored world / level
         let storedWorld = localStorage.getItem('world');
         if (storedWorld == null) {
             this.worldNum = 1;
