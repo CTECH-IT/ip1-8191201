@@ -288,7 +288,6 @@ function playerBoxCallback(player, box) {
             ease: 'Power2',
             onComplete: function (tween, targets) {
                 let sokobanLevel = tween.parent.scene;
-                console.log(sokobanLevel);
 
                 for (let i = 0; i < targets.length; i++) {
                     targets[i].isMoving = false;

@@ -88,9 +88,6 @@ function makeLevels(scene) {
     let levelNum = scene.levelNum;
     let loadNum = scene.loadNum;
     let levels = levelData[loadNum];
-    console.log(levelData);
-    console.log(loadNum);
-    console.log(levels);
 
     scene.levelBoxes = [];
 
@@ -121,7 +118,6 @@ function makeLevels(scene) {
         } else if (loadNum > worldNum) {
             scene.add.image(x, y + 14, 'lock');
             box.available = false;
-            console.log(box);
         } else {
             scene.add.image(x, y + 14, num < levelNum ? 'star' : num == levelNum ? 'grayStar' : 'lock');
             box.available = num < levelNum ? true : num == levelNum ? true : false;
@@ -165,7 +161,6 @@ function createInteractives(scene) {
     mainMenu.setInteractive();
     mainMenu.on('pointerdown', function (pointer) {
         let scene = pointer.manager.game.scene;
-        console.log(scene);
         scene.stop('select');
         scene.start('menu');
     });
