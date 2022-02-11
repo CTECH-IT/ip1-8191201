@@ -7,8 +7,6 @@ class SokobanLevel extends Phaser.Scene {
 
     constructor() {
         super('level');
-
-        this.completed = false;
     }
 
     init(data) {
@@ -154,54 +152,28 @@ class SokobanLevel extends Phaser.Scene {
         // access the most recent move direction
         let dir = moveHistory[moveHistory.length - 1];
 
-        if (!this.completed) {
-            // directional movement
-            if (dir != undefined) {
-                let x = dir == 'left' ? -1 : dir == 'right' ? 1 : 0;
-                let y = dir == 'up' ? -1 : dir == 'down' ? 1 : 0;
-                player.setVelocityX(x * 100);
-                player.setVelocityY(y * 100);
-                player.anims.play(dir, true);
-            } else {
-                player.setVelocityX(0);
-                player.setVelocityY(0);
-                player.anims.stop();
-            }
-
-            // restart and exit to menu keybinds
-            if (keys.reset.isDown) {
-                this.scene.restart();
-            }
-            if (keys.esc.isDown) {
-                this.scene.stop('level')
-                this.scene.start('select', {
-                    loadNum: this.worldNum
-                });
-            }
+        // directional movement
+        if (dir != undefined) {
+            let x = dir == 'left' ? -1 : dir == 'right' ? 1 : 0;
+            let y = dir == 'up' ? -1 : dir == 'down' ? 1 : 0;
+            player.setVelocityX(x * 100);
+            player.setVelocityY(y * 100);
+            player.anims.play(dir, true);
+        } else {
+            player.setVelocityX(0);
+            player.setVelocityY(0);
+            player.anims.stop();
         }
 
-        // iterate through goals, check for level complete
-        let goals = this.goals.children.entries;
-        let complete = true;
-        for (let i = 0; i < goals.length; i++) {
-            let goal = goals[i];
-            let worldTile = this.worldMap[goal.tileX][goal.tileY];
-            if (worldTile == null) { // if no object is located at goal coords, level is not complete
-                complete = false;
-                break;
-            } else if (worldTile.texture.key != 'box') { // goals must have a box in that location
-                complete = false;
-                break;
-            } else if (worldTile.isMoving == true) { // don't complete until all boxes are done moving
-                complete = false;
-                break;
-            }
+        // restart and exit to menu keybinds
+        if (keys.reset.isDown) {
+            this.scene.restart();
         }
-
-        // only run levelCompleteHandler once upon completion
-        if (complete && !this.completed) {
-            this.completed = true;
-            levelCompleteHandler(this);
+        if (keys.esc.isDown) {
+            this.scene.stop('level')
+            this.scene.start('select', {
+                loadNum: this.worldNum
+            });
         }
     }
 }
@@ -315,8 +287,34 @@ function playerBoxCallback(player, box) {
             duration: 100,
             ease: 'Power2',
             onComplete: function (tween, targets) {
+                let sokobanLevel = tween.parent.scene;
+                console.log(sokobanLevel);
+
                 for (let i = 0; i < targets.length; i++) {
                     targets[i].isMoving = false;
+                }
+
+                // iterate through goals, check for level complete
+                let goals = sokobanLevel.goals.children.entries;
+                let complete = true;
+                for (let i = 0; i < goals.length; i++) {
+                    let goal = goals[i];
+                    let worldTile = sokobanLevel.worldMap[goal.tileX][goal.tileY];
+                    if (worldTile == null) { // if no object is located at goal coords, level is not complete
+                        complete = false;
+                        break;
+                    } else if (worldTile.texture.key != 'box') { // goals must have a box in that location
+                        complete = false;
+                        break;
+                    } else if (worldTile.isMoving == true) { // don't complete until all boxes are done moving
+                        complete = false;
+                        break;
+                    }
+                }
+
+                // run levelCompleteHandler once upon completion
+                if (complete) {
+                    levelCompleteHandler(sokobanLevel);
                 }
             }
         });

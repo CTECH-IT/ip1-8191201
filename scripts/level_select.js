@@ -6,6 +6,8 @@ class LevelSelect extends Phaser.Scene {
     }
 
     init(data) {
+
+        // attempy to get stored world / level
         let storedWorld = localStorage.getItem('world');
         if (storedWorld == null) {
             this.worldNum = 1;
@@ -24,6 +26,7 @@ class LevelSelect extends Phaser.Scene {
             this.levelNum = parseInt(storedLevel);
         }
 
+        // loadNum is the number of the world to load
         this.loadNum = data.loadNum;
 
     }
@@ -40,7 +43,7 @@ class LevelSelect extends Phaser.Scene {
         this.load.image('rightButton', 'assets/right_arrow.png');
     }
 
-    create() {
+    create() { // make menu
         this.add.image(400, 288, 'sky');
         this.add.image(400, 88, 'world');
         this.mainMenu = this.add.image(400, 508, 'mainMenu');
@@ -51,7 +54,7 @@ class LevelSelect extends Phaser.Scene {
             boundsAlignH: 'center',
             boundsAlignV: 'middle'
         }
-        this.add.text(400, 88, 'World ' + this.worldNum, titleStyle).setOrigin(0.5);
+        this.add.text(400, 88, 'World ' + this.loadNum, titleStyle).setOrigin(0.5);
 
         if (this.loadNum > 1) {
             this.leftButton = this.add.image(200, 508, 'leftButton');
@@ -67,7 +70,7 @@ class LevelSelect extends Phaser.Scene {
         this.keys = this.input.keyboard.addKeys({ esc: 'ESC' });
     }
 
-    update() {
+    update() { // escape out of level select
         if (this.keys.esc.isDown) {
             this.scene.stop('select');
             this.scene.start('menu');
@@ -76,17 +79,23 @@ class LevelSelect extends Phaser.Scene {
     }
 }
 
+// makes the tiles for the level buttons
 function makeLevels(scene) {
     let worldNum = scene.worldNum;
     let levelNum = scene.levelNum;
     let loadNum = scene.loadNum;
     let levels = levelData[loadNum];
+    console.log(levelData)
+    console.log(loadNum)
+    console.log(levels);
 
     scene.levelBoxes = [];
     
+    // iterate through all levels in world
     for (let i = 0; i < Object.keys(levels).length; i++) {
         let num = i+1;
 
+        // place with modular arithmetic
         let x = 400 + (i%5-2) * 100;
         let y = 258 + (i-i%5)/5*100;
 
@@ -101,11 +110,8 @@ function makeLevels(scene) {
             boundsAlignV: 'middle'
         }
         scene.add.text(x, y-17, num, style).setOrigin(0.5);
-        console.log(worldNum)
-        console.log(loadNum)
-        console.log(num)
         
-        console.log(levelNum)
+        // handle stars and locks
         if (loadNum < worldNum) {
             scene.add.image(x, y+14, 'star');
             box.available = true;
@@ -123,13 +129,15 @@ function makeLevels(scene) {
             let scene = pointer.manager.game.scene;
             let levelSelect = scene.keys['select']
 
+            // iterate through all level boxes to determine which was clicker
             for (let i = 0; i < levelSelect.levelBoxes.length; i++) {
                 let currentBox = levelSelect.levelBoxes[i];
                 let rect = currentBox.getBounds();
-                console.log(currentBox);
+                
+                // if pointer in bounds of a particular box, open that level
                 if (rect.x <= pointer.x && pointer.x <= rect.x+rect.width && 
                     rect.y <= pointer.y && pointer.y <= rect.y+rect.height &&
-                    currentBox.available) {
+                    currentBox.available) { // don't open if locked
                         scene.stop('select')
                         scene.start('level', {
                             world: currentBox.worldNum,
@@ -144,6 +152,7 @@ function makeLevels(scene) {
     }
 }
 
+// creates menu buttons
 function createInteractives(scene) {
     let mainMenu = scene.mainMenu;
     let leftButton = scene.leftButton;
@@ -155,7 +164,7 @@ function createInteractives(scene) {
         let scene = pointer.manager.game.scene;
         console.log(scene);
         scene.stop('select');
-        scene.launch('menu');
+        scene.start('menu');
     });
 
     if (leftButton != null) {
@@ -165,7 +174,7 @@ function createInteractives(scene) {
             scene.stop('select');
             scene.remove('select');
             scene.add('select', LevelSelect, true, {
-                loadNum: loadNum - 1
+                loadNum: parseInt(loadNum) - 1
             });
         });
     }
@@ -177,7 +186,7 @@ function createInteractives(scene) {
             scene.stop('select');
             scene.remove('select');
             scene.add('select', LevelSelect, true, {
-                loadNum: loadNum + 1
+                loadNum: parseInt(loadNum) + 1
             });
         });
     }
