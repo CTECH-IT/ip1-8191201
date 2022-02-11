@@ -29,7 +29,6 @@ class SokobanLevel extends Phaser.Scene {
     }
 
     preload() { // load all sprites
-        console.log(this.worldNum)
         for (let i = 0; i < Math.max(...Object.keys(levelData).map(Number)); i++) {
             let num = i+1;
             this.load.image('floor' + num, 'assets/worlds/' + num + '/floor.png');
@@ -58,7 +57,6 @@ class SokobanLevel extends Phaser.Scene {
         let boxConfig = {
             collideWorldBounds: true
         };
-        console.log('here')
 
         // 2d array to store object locations
         this.worldMap = Array.from(Array(tileWidth), () => new Array(tileHeight));
@@ -86,7 +84,6 @@ class SokobanLevel extends Phaser.Scene {
         make(worldMap, boxes, boxLocations, shift, 'box' + this.worldNum);
         make(worldMap, walls, wallLocations, shift, 'wall' + this.worldNum);
         make(worldMap, goalOverlays, goalLocations, shift, 'goalOverlay' + this.worldNum);
-        console.log(worldMap)
 
         // create player sprite and define bounding box & properties
         this.player = this.physics.add.sprite((this.playerStart[0] + shift[0]) * 32 + 16, (this.playerStart[1] + shift[1]) * 32 + 16, 'ninja');
@@ -248,7 +245,6 @@ function handlePlayerBoxCollision(player, box, worldMap, dx, dy) {
 
     // find the tiles that should be moved, if null stop handling collision
     let toMove = search(box, dx, dy, worldMap);
-    console.log(worldMap)
     if (toMove == null) {
         return;
     }
@@ -265,15 +261,12 @@ function handlePlayerBoxCollision(player, box, worldMap, dx, dy) {
 
 // function is called upon collision between player and a box
 function playerBoxCallback(player, box) {
-    console.log('collide')
     let map = box.scene.worldMap;
     let boxes = box.scene.boxes.children.entries;
-    console.log(boxes);
 
     // if any boxes are moving, do not process collision (handles double touch)
     for (let i = 0; i < boxes.length; i++) {
         if (boxes[i].isMoving) {
-            console.log('moving')
             return;
         }
     }
@@ -283,10 +276,8 @@ function playerBoxCallback(player, box) {
     let dy = player.body.touching.up ? -1 : player.body.touching.down ? 1 : 0;
     let toMove = handlePlayerBoxCollision(player, box, map, dx, dy);
     if (toMove == null) {
-        console.log('null toMove')
         return;
     }
-    console.log(toMove)
 
     // move all the necessary tiles to the updated grid position in worldMap and visually
     for (let i = 0; i < toMove.length; i++) {
