@@ -24,12 +24,10 @@ class SokobanLevel extends Phaser.Scene {
         this.goalLocations = level.goalLocations;
         this.playerStart = level.playerStart;
         this.shift = level.shift;
+        this.ninja = data.ninja;
     }
 
-    preload() {
-
-        // load all sprites
-        this.load.image('sky', 'assets/sky.png');
+    preload() { // load all sprites
         this.load.image('floor', 'assets/floor.png');
         this.load.image('box', 'assets/box.png');
         this.load.image('wall', 'assets/wall_red.png');
@@ -41,7 +39,7 @@ class SokobanLevel extends Phaser.Scene {
         this.load.image('leftButton', 'assets/left_arrow.png');
         this.load.image('rightButton', 'assets/right_arrow.png');
         this.load.spritesheet('ninja',
-            'assets/ninjasprite.png',
+            'assets/ninjas/' + this.ninja + '.png',
             { frameWidth: 32, frameHeight: 32, margin: 2, spacing: 2 }
         );
     }
@@ -203,10 +201,10 @@ function makeObject(worldMap, group, x, y, shift, key) {
     x = x + shift[0];
     y = y + shift[1];
 
-    let b = group.create((x + shift[0]) * 32 + 16, (y + shift[1]) * 32 + 16, key);
+    let b = group.create((x) * 32 + 16, (y) * 32 + 16, key);
     b.setImmovable(true);
-    b.tileX = x + shift[0];
-    b.tileY = y + shift[1];
+    b.tileX = x;
+    b.tileY = y;
 
     if (key != 'goalOverlay') {
         if (worldMap[x][y] != null) {
@@ -357,12 +355,12 @@ function levelCompleteHandler(scene) {
     scene.add.image(400, 288, 'pauseMenu');
     let textStyle = {
         color: 'black',
-        fontFamily: 'sans-serif',
+        fontFamily: 'monospace',
         fontSize: '32px',
         boundsAlignH: 'center',
         boundsAlignV: 'middle'
     }
-    scene.add.text(400, 288 - 80, 'World ' + scene.worldNum + ': Level ' + scene.levelNum, textStyle).setOrigin(0.5);
+    let levelName = scene.add.text(400, 288 - 80, 'World ' + scene.worldNum + ': Level ' + scene.levelNum, textStyle).setOrigin(0.5);
     scene.add.text(400, 288 - 40, 'Complete!', textStyle).setOrigin(0.5);
 
     // give it a lil sparkle w/ a twirly star
