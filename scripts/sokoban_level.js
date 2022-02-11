@@ -170,7 +170,7 @@ class SokobanLevel extends Phaser.Scene {
             this.scene.restart();
         }
         if (keys.esc.isDown) {
-            this.scene.stop('level')
+            this.scene.stop('level');
             this.scene.start('select', {
                 loadNum: this.worldNum
             });
@@ -368,14 +368,14 @@ function levelCompleteHandler(scene) {
         previous = {
             world: worldNum,
             level: levelNum - 1
-        }
+        };
     } else if (worldNum > 1) {
         let prevWorld = Object.keys(levelData[worldNum - 1]);
 
         previous = {
             world: worldNum - 1,
             level: Math.max(...Object.keys(levelData[worldNum - 1]).map(Number))
-        }
+        };
     }
 
     let next = null;
@@ -384,12 +384,12 @@ function levelCompleteHandler(scene) {
         next = {
             world: worldNum,
             level: levelNum + 1
-        }
+        };
     } else if (levelNum == maxLevel) {
         next = {
             world: worldNum + 1,
             level: 1
-        }
+        };
     }
 
     // if the next level exists and comes after the locally stored level, store that instead
@@ -414,7 +414,7 @@ function levelCompleteHandler(scene) {
         fontSize: '32px',
         boundsAlignH: 'center',
         boundsAlignV: 'middle'
-    }
+    };
     let levelName = scene.add.text(400, 288 - 80, 'World ' + scene.worldNum + ': Level ' + scene.levelNum, textStyle).setOrigin(0.5);
     scene.add.text(400, 288 - 40, 'Complete!', textStyle).setOrigin(0.5);
 
@@ -449,7 +449,7 @@ function levelCompleteHandler(scene) {
     }
 
     // right arrow button to move to the next level
-    let maxWorld = Math.max(...Object.keys(levelData).map(Number))
+    let maxWorld = Math.max(...Object.keys(levelData).map(Number));
     if (scene.levelNum < Math.max(...Object.keys(levelData[maxWorld]).map(Number)) || scene.worldNum < maxWorld) {
         let right = scene.add.image(400 + 100, 288 + 80, 'rightButton');
         right.setInteractive();
@@ -464,7 +464,7 @@ function levelCompleteHandler(scene) {
     }
 
     // level select button
-    let select = scene.add.image(400, 288+180, 'levelSelect');
+    let select = scene.add.image(400, 288 + 180, 'levelSelect');
     select.setInteractive();
     select.on('pointerdown', function (pointer) {
         let scene = pointer.manager.game.scene;

@@ -26,15 +26,15 @@ class LevelSelect extends Phaser.Scene {
             this.levelNum = parseInt(storedLevel);
         }
 
-        localStorage.setItem('world', this.worldNum)
-        localStorage.setItem('level', this.levelNum)
+        localStorage.setItem('world', this.worldNum);
+        localStorage.setItem('level', this.levelNum);
 
         // loadNum is the number of the world to load
         this.loadNum = data.loadNum;
 
     }
 
-    preload() {
+    preload() { // load sprites
         this.load.image('sky', 'assets/sky.png');
         this.load.image('world', 'assets/world.png');
         this.load.image('levelBox', 'assets/level_box.png');
@@ -56,7 +56,7 @@ class LevelSelect extends Phaser.Scene {
             fontSize: '60px',
             boundsAlignH: 'center',
             boundsAlignV: 'middle'
-        }
+        };
         this.add.text(400, 88, 'World ' + this.loadNum, titleStyle).setOrigin(0.5);
 
         if (this.loadNum > 1) {
@@ -88,19 +88,19 @@ function makeLevels(scene) {
     let levelNum = scene.levelNum;
     let loadNum = scene.loadNum;
     let levels = levelData[loadNum];
-    console.log(levelData)
-    console.log(loadNum)
+    console.log(levelData);
+    console.log(loadNum);
     console.log(levels);
 
     scene.levelBoxes = [];
-    
+
     // iterate through all levels in world
     for (let i = 0; i < Object.keys(levels).length; i++) {
-        let num = i+1;
+        let num = i + 1;
 
         // place with modular arithmetic
-        let x = 400 + (i%5-2) * 100;
-        let y = 258 + (i-i%5)/5*100;
+        let x = 400 + (i % 5 - 2) * 100;
+        let y = 258 + (i - i % 5) / 5 * 100;
 
         let box = scene.add.image(x, y, 'levelBox');
         box.worldNum = loadNum;
@@ -111,45 +111,45 @@ function makeLevels(scene) {
             fontSize: '32px',
             boundsAlignH: 'center',
             boundsAlignV: 'middle'
-        }
-        scene.add.text(x, y-17, num, style).setOrigin(0.5);
-        
+        };
+        scene.add.text(x, y - 17, num, style).setOrigin(0.5);
+
         // handle stars and locks
         if (loadNum < worldNum) {
-            scene.add.image(x, y+14, 'star');
+            scene.add.image(x, y + 14, 'star');
             box.available = true;
         } else if (loadNum > worldNum) {
-            scene.add.image(x, y+14, 'lock');
+            scene.add.image(x, y + 14, 'lock');
             box.available = false;
             console.log(box);
         } else {
-            scene.add.image(x, y+14, num < levelNum ? 'star': num == levelNum ? 'grayStar' : 'lock');
-            box.available = num < levelNum ? true: num == levelNum ? true : false;
+            scene.add.image(x, y + 14, num < levelNum ? 'star' : num == levelNum ? 'grayStar' : 'lock');
+            box.available = num < levelNum ? true : num == levelNum ? true : false;
         }
 
         box.setInteractive();
         box.on('pointerdown', function (pointer) {
             let scene = pointer.manager.game.scene;
-            let levelSelect = scene.keys['select']
+            let levelSelect = scene.keys['select'];
 
             // iterate through all level boxes to determine which was clicker
             for (let i = 0; i < levelSelect.levelBoxes.length; i++) {
                 let currentBox = levelSelect.levelBoxes[i];
                 let rect = currentBox.getBounds();
-                
+
                 // if pointer in bounds of a particular box, open that level
-                if (rect.x <= pointer.x && pointer.x <= rect.x+rect.width && 
-                    rect.y <= pointer.y && pointer.y <= rect.y+rect.height &&
+                if (rect.x <= pointer.x && pointer.x <= rect.x + rect.width &&
+                    rect.y <= pointer.y && pointer.y <= rect.y + rect.height &&
                     currentBox.available) { // don't open if locked
-                        scene.stop('select')
-                        scene.start('level', {
-                            world: currentBox.worldNum,
-                            level: currentBox.levelNum
+                    scene.stop('select');
+                    scene.start('level', {
+                        world: currentBox.worldNum,
+                        level: currentBox.levelNum
                     });
                     break;
                 }
             }
-        })
+        });
 
         scene.levelBoxes.push(box);
     }
@@ -170,6 +170,7 @@ function createInteractives(scene) {
         scene.start('menu');
     });
 
+    //left & right navigation
     if (leftButton != null) {
         leftButton.setInteractive();
         leftButton.on('pointerdown', function (pointer) {

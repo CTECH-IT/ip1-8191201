@@ -6,6 +6,8 @@ class Menu extends Phaser.Scene {
     }
 
     init(data) {
+
+        // try to get stored ninja
         let storedNinja = localStorage.getItem('ninja');
         if (storedNinja == null) {
             this.ninja = 'blackninja';
@@ -16,7 +18,7 @@ class Menu extends Phaser.Scene {
         }
     }
 
-    preload() {
+    preload() { // load all sprites
         this.load.image('sky', 'assets/sky.png');
         this.load.image('title', 'assets/title.png');
         this.load.image('levelSelect', 'assets/level_select.png');
@@ -24,10 +26,10 @@ class Menu extends Phaser.Scene {
         this.load.image('characterSelect', 'assets/character_select.png');
         this.load.image('play', 'assets/play.png');
 
-        // load all ninja sprites
+        // iteratively loads all ninja sprites
         ninjas = ['blackninja', 'redninja', 'greenninja', 'grayninja', 'blueninja', 'amogus'];
         for (let i = 0; i < ninjas.length; i++) {
-            let ninja = ninjas[i]
+            let ninja = ninjas[i];
             this.load.spritesheet(ninja,
                 'assets/ninjas/' + ninja + '.png',
                 { frameWidth: 32, frameHeight: 32, margin: 2, spacing: 2 }
@@ -63,7 +65,7 @@ class Menu extends Phaser.Scene {
             fontSize: '16px',
             boundsAlignH: 'center',
             boundsAlignV: 'middle'
-        }
+        };
         this.infoMessage = this.add.text(400, 528, 'Use the \'R\' key to reset a level, and \'ESC\' to go back a menu.', style).setOrigin(0.5);
         this.infoMessage.alpha = 0;
 
@@ -99,7 +101,7 @@ class Menu extends Phaser.Scene {
                         // make buttons interactable
                         createInteractives(tween.parent.scene);
                     }
-                })
+                });
             }
         });
     }
@@ -130,7 +132,7 @@ function createInteractives(scene) {
         menu.charDisplay.setTexture(menu.ninja);
         menu.charDisplay.anims.play(menu.ninja);
 
-        localStorage.setItem('ninja', menu.ninja)
+        localStorage.setItem('ninja', menu.ninja);
     });
 
     // hehe
@@ -160,7 +162,7 @@ function createInteractives(scene) {
             loadLevel = storedLevel;
         }
 
-        scene.stop('menu')
+        scene.stop('menu');
         scene.start('level', {
             world: loadWorld,
             level: loadLevel
@@ -178,7 +180,7 @@ function createInteractives(scene) {
         if (loadNum == null) {
             loadNum = 1;
         }
-        scene.stop('menu')
+        scene.stop('menu');
         scene.start('select', {
             loadNum: loadNum
         });
