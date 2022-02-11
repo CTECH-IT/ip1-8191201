@@ -24,7 +24,10 @@ class SokobanLevel extends Phaser.Scene {
         this.goalLocations = level.goalLocations;
         this.playerStart = level.playerStart;
         this.shift = level.shift;
-        this.ninja = data.ninja;
+        this.ninja = localStorage.getItem('ninja');
+        if (this.ninja == null) {
+            this.ninja = 'blackninja';
+        }
     }
 
     preload() { // load all sprites
@@ -122,7 +125,7 @@ class SokobanLevel extends Phaser.Scene {
 
         // create input listeners
         this.cursors = this.input.keyboard.createCursorKeys();
-        this.keys = this.input.keyboard.addKeys({ up: 'W', left: 'A', down: 'S', right: 'D', reset: 'R' });
+        this.keys = this.input.keyboard.addKeys({ up: 'W', left: 'A', down: 'S', right: 'D', reset: 'R', esc: 'ESC' });
     }
 
     update() {
@@ -164,9 +167,12 @@ class SokobanLevel extends Phaser.Scene {
                 player.anims.stop();
             }
 
-            // restart keybind
+            // restart and exit to menu keybinds
             if (keys.reset.isDown) {
                 this.scene.restart();
+            }
+            if (keys.esc.isDown) {
+                this.scene.start('menu');
             }
         }
 
@@ -350,6 +356,53 @@ function search(box, dx, dy, worldMap) {
 
 // function called once upon level completion
 function levelCompleteHandler(scene) {
+
+    // calculate and store previous / next level
+    let worldNum = parseInt(scene.worldNum);
+    let levelNum = parseInt(scene.levelNum);
+
+    let previous = null;
+    if (levelNum > 1) {
+        previous = {
+            world: worldNum,
+            level: levelNum - 1
+        }
+    } else if (worldNum > 1) {
+        let prevWorld = Object.keys(levelData[worldNum - 1]);
+
+        previous = {
+            world: worldNum - 1,
+            level: Math.max(...Object.keys(levelData[worldNum - 1]).map(Number))
+        }
+    }
+
+    let next = null;
+    let maxLevel = Math.max(...Object.keys(levelData[worldNum]).map(Number));
+    if (levelNum < maxLevel) {
+        next = {
+            world: worldNum,
+            level: levelNum + 1
+        }
+    } else if (levelNum == maxLevel) {
+        next = {
+            world: worldNum + 1,
+            level: 1
+        }
+    }
+
+    // if the next level exists and comes after the locally stored level, store that instead
+    let storedWorld = localStorage.getItem('world');
+    let storedLevel = localStorage.getItem('level');
+    if (next != null) {
+        if (next.world > storedWorld) {
+            localStorage.setItem('world', next.world);
+            localStorage.setItem('level', next.level);
+        } else if (next.level > storedLevel) {
+            localStorage.setItem('world', next.world);
+            localStorage.setItem('level', next.level);
+        }
+    }
+
     // add overlay and menu
     scene.add.image(400, 288, 'whiteOverlay');
     scene.add.image(400, 288, 'pauseMenu');
@@ -380,7 +433,7 @@ function levelCompleteHandler(scene) {
     });
 
     // left arrow button to move to the previous level
-    if (scene.levelNum > 1) {
+    if (scene.levelNum > 1 || scene.worldNum > 1) {
         let left = scene.add.image(400 - 100, 288 + 80, 'leftButton');
         left.setInteractive();
         left.on('pointerdown', function (pointer) {
@@ -392,15 +445,13 @@ function levelCompleteHandler(scene) {
 
             scene.stop('level');
             scene.remove('level');
-            scene.add('level', SokobanLevel, true, {
-                world: worldNum,
-                level: levelNum - 1
-            });
+            scene.add('level', SokobanLevel, true, previous);
         });
     }
 
     // right arrow button to move to the next level
-    if (scene.levelNum < 8) {
+    let maxWorld = Math.max(...Object.keys(levelData).map(Number))
+    if (scene.levelNum < Math.max(...Object.keys(levelData[maxWorld]).map(Number)) || scene.worldNum < maxWorld) {
         let right = scene.add.image(400 + 100, 288 + 80, 'rightButton');
         right.setInteractive();
         right.on('pointerdown', function (pointer) {
@@ -412,13 +463,9 @@ function levelCompleteHandler(scene) {
 
             scene.stop('level');
             scene.remove('level');
-            scene.add('level', SokobanLevel, true, {
-                world: worldNum,
-                level: levelNum + 1
-            });
+            scene.add('level', SokobanLevel, true, next);
         });
     }
-
 }
 
 export default SokobanLevel;

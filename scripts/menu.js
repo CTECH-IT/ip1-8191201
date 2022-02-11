@@ -1,10 +1,19 @@
+let ninjas = ['blackninja', 'redninja', 'greenninja', 'grayninja', 'blueninja', 'amogus'];
+
 class Menu extends Phaser.Scene {
     constructor() {
         super('menu');
     }
 
     init(data) {
-        this.ninja = 'blackninja';
+        let storedNinja = localStorage.getItem('ninja');
+        if (storedNinja == null) {
+            this.ninja = 'blackninja';
+        } else if (ninjas.indexOf(storedNinja) == -1) {
+            this.ninja = 'blackninja';
+        } else {
+            this.ninja = storedNinja;
+        }
     }
 
     preload() {
@@ -15,9 +24,10 @@ class Menu extends Phaser.Scene {
         this.load.image('characterSelect', 'assets/character_select.png');
         this.load.image('play', 'assets/play.png');
 
-        this.ninjas = ['blackninja', 'redninja', 'greenninja', 'grayninja', 'blueninja', 'amogus'];
-        for (let i = 0; i < this.ninjas.length; i++) {
-            let ninja = this.ninjas[i]
+        // load all ninja sprites
+        ninjas = ['blackninja', 'redninja', 'greenninja', 'grayninja', 'blueninja', 'amogus'];
+        for (let i = 0; i < ninjas.length; i++) {
+            let ninja = ninjas[i]
             this.load.spritesheet(ninja,
                 'assets/ninjas/' + ninja + '.png',
                 { frameWidth: 32, frameHeight: 32, margin: 2, spacing: 2 }
@@ -27,23 +37,29 @@ class Menu extends Phaser.Scene {
 
     create() {
         this.add.image(400, 288, 'sky');
+
+        // create all buttons and stuff invisible
         let title = this.add.image(400, 288, 'title');
         title.alpha = 0;
 
         this.levelSelect = this.add.image(400, 338, 'levelSelect');
         this.levelSelect.alpha = 0;
+
         this.credits = this.add.image(400, 238, 'credits');
         this.credits.alpha = 0;
+
         this.playButton = this.add.image(400, 438, 'play');
         this.playButton.alpha = 0;
 
         this.charDisplay = this.add.sprite(665, 318, this.ninja);
         this.charDisplay.alpha = 0;
+
         this.charSelect = this.add.sprite(665, 358, 'characterSelect');
         this.charSelect.alpha = 0;
 
-        for (let i = 0; i < this.ninjas.length; i++) {
-            let ninja = this.ninjas[i];
+        // create anims for all ninjas
+        for (let i = 0; i < ninjas.length; i++) {
+            let ninja = ninjas[i];
             this.anims.create({
                 key: ninja,
                 frames: this.anims.generateFrameNumbers(ninja, { start: 0, end: 3 }),
@@ -51,9 +67,9 @@ class Menu extends Phaser.Scene {
                 repeat: -1
             });
         }
-
         this.charDisplay.anims.play(this.ninja);
 
+        // animation sequence for main menu
         this.tweens.add({
             targets: title,
             alpha: 1,
@@ -66,21 +82,16 @@ class Menu extends Phaser.Scene {
                 tween.parent.add({
                     targets: [scene.levelSelect, scene.credits, scene.playButton, scene.charDisplay, scene.charSelect],
                     alpha: 1,
-                    duration: 1000,
+                    duration: 500,
                     ease: 'Power0',
                     onComplete: function (tween, targets) {
+
+                        // make buttons interactable
                         createInteractives(tween.parent.scene);
                     }
                 })
             }
         });
-
-        /*
-        this.scene.start('level', {
-            world: 1,
-            level: 1,
-            ninja: 'amogus'
-        });*/
     }
 
     update() {
@@ -88,25 +99,72 @@ class Menu extends Phaser.Scene {
     }
 }
 
+// sets up interactivity for each button
 function createInteractives(scene) {
     let levelSelect = scene.levelSelect;
-    let levelEditor = scene.levelEditor;
+    let credits = scene.credits;
     let playButton = scene.playButton;
     let charDisplay = scene.charDisplay;
     let charSelect = scene.charSelect;
 
+    // cycle through possible ninjas and save/select from local storage
     charSelect.setInteractive();
     charSelect.on('pointerdown', function (pointer) {
         let scene = pointer.manager.game.scene;
         let menu = scene.keys['menu'];
 
-        let ind = menu.ninjas.indexOf(menu.ninja);
+        let ind = ninjas.indexOf(menu.ninja);
         ind += 1;
-        ind %= menu.ninjas.length;
-        menu.ninja = menu.ninjas[ind];
+        ind %= ninjas.length;
+        menu.ninja = ninjas[ind];
 
         menu.charDisplay.setTexture(menu.ninja);
         menu.charDisplay.anims.play(menu.ninja);
+
+        localStorage.setItem('ninja', menu.ninja)
+    });
+
+    // hehe
+    credits.setInteractive();
+    credits.on('pointerdown', function (pointer) {
+        window.open('https://michaelyhuang.com', '_blank');
+    });
+
+    // play from stored world/level
+    playButton.setInteractive();
+    playButton.on('pointerdown', function (pointer) {
+        let scene = pointer.manager.game.scene;
+        let menu = scene.keys['menu'];
+        let storedWorld = localStorage.getItem('world');
+        let storedLevel = localStorage.getItem('level');
+        let loadWorld = null;
+        let loadLevel = null;
+
+        if (storedWorld == null || storedLevel == null) {
+            loadWorld = 1;
+            loadLevel = 1;
+        } else if (isNaN(storedWorld) || isNaN(storedLevel)) {
+            loadWorld = 1;
+            loadLevel = 1;
+        } else {
+            loadWorld = storedWorld;
+            loadLevel = storedLevel;
+        }
+
+        scene.start('level', {
+            world: loadWorld,
+            level: loadLevel
+        });
+
+        localStorage.setItem('world', loadWorld);
+        localStorage.setItem('level', loadLevel);
+    });
+
+    // go to level select
+    levelSelect.setInteractive();
+    levelSelect.on('pointerdown', function (pointer) {
+        let scene = pointer.manager.game.scene;
+        scene.start('select');
     });
 }
 

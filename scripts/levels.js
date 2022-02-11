@@ -1,24 +1,4 @@
-let levelData = {
-    test: {
-        1: {
-            boxLocations: [
-                [5, 5, 15, 15]
-            ],
-            wallLocations: [
-                [0, 0, 24, 0],
-                [0, 17, 24, 17],
-                [0, 1, 0, 16],
-                [24, 1, 24, 16]
-            ],
-            goalLocations: [
-                [5, 4],
-                [5, 16]
-            ],
-            playerStart: [1, 1],
-            shift: [0, 0]
-        }
-    },
-    1: {
+let levelData = {1: {
         1: {
             boxLocations: [
                 [3, 1],
