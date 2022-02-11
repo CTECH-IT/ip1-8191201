@@ -11,7 +11,7 @@ let levelData = {
                 [24, 1, 24, 16]
             ],
             goalLocations: [
-                [5, 5],
+                [5, 4],
                 [5, 16]
             ],
             playerStart: [1, 1],

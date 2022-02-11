@@ -75,13 +75,13 @@ class SokobanLevel extends Phaser.Scene {
         let shift = this.shift;
 
         // make objects in the correct order; display overlays over boxes but under player
-        makeGoals(worldMap, goals, goalLocations, shift, 'goal');
-        makeBoxes(worldMap, boxes, boxLocations, shift, 'box');
-        makeBoxes(worldMap, walls, wallLocations, shift, 'wall');
-        makeOverlays(goalOverlays, goalLocations, shift, 'goalOverlay');
+        make(worldMap, goals, goalLocations, shift, 'goal');
+        make(worldMap, boxes, boxLocations, shift, 'box');
+        make(worldMap, walls, wallLocations, shift, 'wall');
+        make(worldMap, goalOverlays, goalLocations, shift, 'goalOverlay');
 
         // create player sprite and define bounding box & properties
-        this.player = this.physics.add.sprite((this.playerStart[0]+shift[0]) * 32 + 16, (this.playerStart[1]+shift[1]) * 32 + 16, 'ninja');
+        this.player = this.physics.add.sprite((this.playerStart[0] + shift[0]) * 32 + 16, (this.playerStart[1] + shift[1]) * 32 + 16, 'ninja');
         let player = this.player;
         player.setBounce(0);
         player.setCollideWorldBounds(true);
@@ -91,7 +91,7 @@ class SokobanLevel extends Phaser.Scene {
 
         // colliders handle collisions between objects
         // special case for player-box collisions to handle grid-based movement
-        this.physics.add.collider(player, boxes, playerBoxCallback, playerBoxProcessCallback);
+        this.physics.add.collider(player, boxes, playerBoxCallback);
         this.physics.add.collider(player, walls);
         this.physics.add.collider(boxes, boxes);
         this.physics.add.collider(boxes, walls);
@@ -155,8 +155,8 @@ class SokobanLevel extends Phaser.Scene {
         if (!this.completed) {
             // directional movement
             if (dir != undefined) {
-                let x = dir == 'left' ? -1 : dir == 'right'? 1 : 0;
-                let y = dir == 'up' ? -1 : dir == 'down'? 1 : 0;
+                let x = dir == 'left' ? -1 : dir == 'right' ? 1 : 0;
+                let y = dir == 'up' ? -1 : dir == 'down' ? 1 : 0;
                 player.setVelocityX(x * 100);
                 player.setVelocityY(y * 100);
                 player.anims.play(dir, true);
@@ -171,7 +171,7 @@ class SokobanLevel extends Phaser.Scene {
                 this.scene.restart();
             }
         }
-        
+
         // iterate through goals, check for level complete
         let goals = this.goals.children.entries;
         let complete = true;
@@ -198,19 +198,35 @@ class SokobanLevel extends Phaser.Scene {
     }
 }
 
-function makeBoxes(worldMap, group, locations, shift, key) {
+// make a single object at location (adj by shift)
+function makeObject(worldMap, group, x, y, shift, key) {
+    x = x + shift[0];
+    y = y + shift[1];
+
+    let b = group.create((x + shift[0]) * 32 + 16, (y + shift[1]) * 32 + 16, key);
+    b.setImmovable(true);
+    b.tileX = x + shift[0];
+    b.tileY = y + shift[1];
+
+    if (key != 'goalOverlay') {
+        if (worldMap[x][y] != null) {
+            throw new EvalError('object already exists at location: (' + x + ', ' + y + ')' + key + worldMap[coords[0] + shift[0]][coords[1] + shift[1]].texture.key);
+        }
+    }
+    if (key == 'box' || key == 'wall') {
+        worldMap[x][y] = b;
+    }
+    if (key == 'box') {
+        b.isMoving = false;
+    }
+}
+
+// make all objects using array of locations
+function make(worldMap, group, locations, shift, key) {
     for (let i = 0; i < locations.length; i++) {
         let coords = locations[i];
         if (coords.length == 2) {
-            let b = group.create((coords[0]+shift[0]) * 32 + 16, (coords[1]+shift[1]) * 32 + 16, key);
-            b.setImmovable(true);
-            b.tileX = coords[0]+shift[0];
-            b.tileY = coords[1]+shift[1];
-            b.isMoving = false;
-            if (worldMap[coords[0]+shift[0]][coords[1]+shift[1]] != null) {
-                throw new EvalError('object already exists at location: (' + coords[0] + ', ' + coords[1] + ')');
-            }
-            worldMap[coords[0]+shift[0]][coords[1]+shift[1]] = b;
+            makeObject(worldMap, group, ...coords, shift, key);
         } else if (coords.length == 4) {
             let xMin = Math.min(coords[0], coords[2]);
             let xMax = Math.max(coords[0], coords[2]);
@@ -218,222 +234,67 @@ function makeBoxes(worldMap, group, locations, shift, key) {
             let yMax = Math.max(coords[1], coords[3]);
             for (let x = xMin; x <= xMax; x++) {
                 for (let y = yMin; y <= yMax; y++) {
-                    let b = group.create((x+shift[0]) * 32 + 16, (y+shift[1]) * 32 + 16, key);
-                    b.setImmovable(true);
-                    b.tileX = x+shift[0];
-                    b.tileY = y+shift[1];
-                    b.isMoving = false;
-                    if (worldMap[x+shift[0]][y+shift[1]] != null) {
-                        throw new EvalError('object already exists at location: (' + x + ', ' + y + ')');
-                    }
-                    worldMap[x+shift[0]][y+shift[1]] = b;
+                    makeObject(worldMap, group, x, y, shift, key);
                 }
             }
         }
     }
 }
 
-function makeGoals(worldMap, group, locations, shift, key) {
-    for (let i = 0; i < locations.length; i++) {
-        let coords = locations[i];
-        if (coords.length == 2) {
-            let b = group.create((coords[0]+shift[0]) * 32 + 16, (coords[1]+shift[1]) * 32 + 16, key);
-            b.setImmovable(true);
-            b.tileX = coords[0]+shift[0];
-            b.tileY = coords[1]+shift[1];
-            if (worldMap[coords[0]+shift[0]][coords[1]+shift[1]] != null) {
-                throw new EvalError('object already exists at location');
-            }
-        } else if (coords.length == 4) {
-            let xMin = Math.min(coords[0], coords[2]);
-            let xMax = Math.max(coords[0], coords[2]);
-            let yMin = Math.min(coords[1], coords[3]);
-            let yMax = Math.max(coords[1], coords[3]);
-            for (let x = xMin; x <= xMax; x++) {
-                for (let y = yMin; y <= yMax; y++) {
-                    let b = group.create((x+shift[0]) * 32 + 16, (y+shift[1]) * 32 + 16, key);
-                    b.setImmovable(true);
-                    b.tileX = x+shift[0];
-                    b.tileY = y+shift[1];
-                    if (worldMap[x+shift[0]][y+shift[1]] != null) {
-                        throw new EvalError('object already exists at location');
-                    }
-                }
-            }
-        }
+function handlePlayerBoxCollision(player, box, worldMap, dx, dy) {
+    let x_diff = (player.body.center.x - box.body.center.x) * Math.abs(dy);
+    let y_diff = (player.body.center.y - box.body.center.y) * Math.abs(dx);
+    let signed_x = Math.sign(x_diff);
+    let signed_y = Math.sign(y_diff);
+
+    // we only handle the case where exactly one of dx and dy are nonzero
+    if ((dx == 0 && dy == 0) || (dx != 0 && dy != 0)) {
+        return;
     }
+
+    // if the player is closer to a neighboring tile, check collisions on that tile first
+    let neighborTile = worldMap[box.tileX + signed_x][box.tileY + signed_y];
+    if (neighborTile != null && Math.max(x_diff, y_diff) > 16) {
+        return playerBoxCallback(player, neighborTile);
+    }
+
+    // find the tiles that should be moved, if null stop handling collision
+    let toMove = search(box, dx, dy, worldMap);
+    if (toMove == null) {
+        return;
+    }
+
+    // adjust coordinates to new coordinates for each tile in toMove
+    for (let n = 0; n < toMove.length; n++) {
+        let b = toMove[n];
+        worldMap[b.tileX][b.tileY] = null;
+        b.tileX += dx;
+        b.tileY += dy;
+    }
+    return toMove;
 }
 
-function makeOverlays(group, locations, shift, key) {
-    for (let i = 0; i < locations.length; i++) {
-        let coords = locations[i];
-        if (coords.length == 2) {
-            let b = group.create((coords[0]+shift[0]) * 32 + 16, (coords[1]+shift[1]) * 32 + 16, key);
-            b.setImmovable(true);
-            b.tileX = coords[0]+shift[0];
-            b.tileY = coords[1]+shift[1];
-        } else if (coords.length == 4) {
-            let xMin = Math.min(coords[0], coords[2]);
-            let xMax = Math.max(coords[0], coords[2]);
-            let yMin = Math.min(coords[1], coords[3]);
-            let yMax = Math.max(coords[1], coords[3]);
-            for (let x = xMin; x <= xMax; x++) {
-                for (let y = yMin; y <= yMax; y++) {
-                    let b = group.create((x+shift[0]) * 32 + 16, (y+shift[1]) * 32 + 16, key);
-                    b.setImmovable(true);
-                    b.tileX = x+shift[0];
-                    b.tileY = y+shift[1];
-                }
-            }
-        }
-    }
-}
-
+// function is called upon collision between player and a box
 function playerBoxCallback(player, box) {
     let map = box.scene.worldMap;
-    let toMove = box;
     let boxes = box.scene.boxes.children.entries;
 
-    let xDiff = Math.abs(player.body.center.x - box.body.center.x);
-    let yDiff = Math.abs(player.body.center.y - box.body.center.y);
-
+    // if any boxes are moving, do not process collision (handles double touch)
     for (let i = 0; i < boxes.length; i++) {
         if (boxes[i].isMoving) {
-            return false;
+            return;
         }
     }
 
-    if (player.body.touching.up) {
-        if (player.body.center.x < box.body.center.x) {
-            if (map[box.tileX - 1][box.tileY] != null) {
-                if (map[box.tileX - 1][box.tileY].texture.key == 'box') {
-                    if (xDiff > 16) {
-                        if (playerBoxCallback(player, map[box.tileX - 1][box.tileY])) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        } else if (player.body.center.x > box.body.center.x) {
-            if (map[box.tileX + 1][box.tileY] != null) {
-                if (map[box.tileX + 1][box.tileY].texture.key == 'box') {
-                    if (xDiff > 16) {
-                        if (playerBoxCallback(player, map[box.tileX + 1][box.tileY])) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-        toMove = search(box, 0, -1, map);
-        if (toMove == null) {
-            return false;
-        }
-        for (let n = 0; n < toMove.length; n++) {
-            let b = toMove[n];
-            map[b.tileX][b.tileY] = null;
-            b.tileY -= 1;
-        }
-
-    } else if (player.body.touching.down) {
-        if (player.body.center.x < box.body.center.x) {
-            if (map[box.tileX - 1][box.tileY] != null) {
-                if (map[box.tileX - 1][box.tileY].texture.key == 'box') {
-                    if (xDiff > 16) {
-                        if (playerBoxCallback(player, map[box.tileX - 1][box.tileY])) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        } else if (player.body.center.x > box.body.center.x) {
-            if (map[box.tileX + 1][box.tileY] != null) {
-                if (map[box.tileX + 1][box.tileY].texture.key == 'box') {
-                    if (xDiff > 16) {
-                        if (playerBoxCallback(player, map[box.tileX + 1][box.tileY])) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-        toMove = search(box, 0, 1, map);
-        if (toMove == null) {
-            return false;
-        }
-        for (let n = 0; n < toMove.length; n++) {
-            let b = toMove[n];
-            map[b.tileX][b.tileY] = null;
-            b.tileY += 1;
-        }
-
-    } else if (player.body.touching.left) {
-        if (player.body.center.y < box.body.center.y) {
-            if (map[box.tileX][box.tileY - 1] != null) {
-                if (map[box.tileX][box.tileY - 1].texture.key == 'box') {
-                    if (yDiff > 16) {
-                        if (playerBoxCallback(player, map[box.tileX][box.tileY - 1])) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        } else {
-            if (map[box.tileX][box.tileY + 1] != null) {
-                if (map[box.tileX][box.tileY + 1].texture.key == 'box') {
-                    if (yDiff > 16) {
-                        if (playerBoxCallback(player, map[box.tileX][box.tileY + 1])) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-        toMove = search(box, -1, 0, map);
-        if (toMove == null) {
-            return false;
-        }
-        for (let n = 0; n < toMove.length; n++) {
-            let b = toMove[n];
-            map[b.tileX][b.tileY] = null;
-            b.tileX -= 1;
-        }
-
-    } else if (player.body.touching.right) {
-        if (player.body.center.y < box.body.center.y) {
-            if (map[box.tileX][box.tileY - 1] != null) {
-                if (map[box.tileX][box.tileY - 1].texture.key == 'box') {
-                    if (yDiff > 16) {
-                        if (playerBoxCallback(player, map[box.tileX][box.tileY - 1])) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        } else {
-            if (map[box.tileX][box.tileY + 1] != null) {
-                if (map[box.tileX][box.tileY + 1].texture.key == 'box') {
-                    if (yDiff > 16) {
-                        if (playerBoxCallback(player, map[box.tileX][box.tileY + 1])) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-        toMove = search(box, 1, 0, map);
-        if (toMove == null) {
-            return false;
-        }
-        for (let n = 0; n < toMove.length; n++) {
-            let b = toMove[n];
-            map[b.tileX][b.tileY] = null;
-            b.tileX += 1;
-        }
-
-    } else {
-        return false;
+    // collide player and box, and store resulting array of tiles to move
+    let dx = player.body.touching.left ? -1 : player.body.touching.right ? 1 : 0;
+    let dy = player.body.touching.up ? -1 : player.body.touching.down ? 1 : 0;
+    let toMove = handlePlayerBoxCollision(player, box, map, dx, dy);
+    if (toMove == null) {
+        return;
     }
+
+    // move all the necessary tiles to the updated grid position in worldMap and visually
     for (let i = 0; i < toMove.length; i++) {
         let b = toMove[i];
         map[b.tileX][b.tileY] = b;
@@ -452,66 +313,51 @@ function playerBoxCallback(player, box) {
             }
         });
     }
-    return true;
 }
 
-function playerBoxProcessCallback(player, box) {
-    return !box.isMoving;
-}
-
+// searches, starting from box and moving in dx, dy direction, for a chunk of boxes that can be moved
 function search(box, dx, dy, worldMap) {
     let x = box.tileX;
     let y = box.tileY;
 
     while (0 <= x && x < tileWidth && 0 <= y && y < tileHeight) {
-        if (worldMap[x][y] == null) {
+        if (worldMap[x][y] == null) { // if there's an empty space, we are done searching
             break;
         }
-        if (worldMap[x][y].texture.key != 'box') {
+        if (worldMap[x][y].texture.key != 'box') { // if there's a non-box in the way
             break;
         }
         x += dx;
         y += dy;
     }
 
-    if (x < 0 || y < 0 || x >= tileWidth || y >= tileHeight) {
+    if (x < 0 || y < 0 || x >= tileWidth || y >= tileHeight) { // searched all the way to world bounds -> no movable boxes
         return null;
-    } else if (worldMap[x][y] != null) {
+    } else if (worldMap[x][y] != null) { // no empty space for boxes to move into
         return null;
-    } else {
+    } else { // succesfully found movable boxes, gather in an array to return
         let result = new Array();
         if (dy == 0) {
-            if (dx == -1) {
-                for (let i = box.tileX; i > x; i--) {
-                    result.push(worldMap[i][y]);
-                }
-            } else if (dx == 1) {
-                for (let i = box.tileX; i < x; i++) {
-                    result.push(worldMap[i][y]);
-                }
+            for (let i = box.tileX; i != x; i += dx) {
+                result.push(worldMap[i][y]);
             }
         } else if (dx == 0) {
-            if (dy == -1) {
-                for (let j = box.tileY; j > y; j--) {
-                    result.push(worldMap[x][j]);
-                }
-            } else if (dy == 1) {
-                for (let j = box.tileY; j < y; j++) {
-                    result.push(worldMap[x][j]);
-                }
+            for (let j = box.tileY; j != y; j += dy) {
+                result.push(worldMap[x][j]);
             }
         }
         return result;
     }
 }
 
+// function called once upon level completion
 function levelCompleteHandler(scene) {
-    //scene.input.keyboard.destroy();
+    // add overlay and menu
     scene.add.image(400, 288, 'whiteOverlay');
     scene.add.image(400, 288, 'pauseMenu');
     let textStyle = {
         color: 'black',
-        //fontFamily: 'Courier',
+        fontFamily: 'sans-serif',
         fontSize: '32px',
         boundsAlignH: 'center',
         boundsAlignV: 'middle'
@@ -519,6 +365,7 @@ function levelCompleteHandler(scene) {
     scene.add.text(400, 288 - 80, 'World ' + scene.worldNum + ': Level ' + scene.levelNum, textStyle).setOrigin(0.5);
     scene.add.text(400, 288 - 40, 'Complete!', textStyle).setOrigin(0.5);
 
+    // give it a lil sparkle w/ a twirly star
     let star = scene.add.image(400, 288, 'star');
     star.alpha = 0;
     scene.tweens.add({
@@ -534,13 +381,14 @@ function levelCompleteHandler(scene) {
         }
     });
 
+    // left arrow button to move to the previous level
     if (scene.levelNum > 1) {
         let left = scene.add.image(400 - 100, 288 + 80, 'leftButton');
         left.setInteractive();
-        left.on('pointerdown', function(pointer) {
+        left.on('pointerdown', function (pointer) {
             let scene = pointer.manager.game.scene;
             let sokobanLevel = scene.keys['level'];
-            
+
             let worldNum = sokobanLevel.worldNum;
             let levelNum = sokobanLevel.levelNum;
 
@@ -553,13 +401,14 @@ function levelCompleteHandler(scene) {
         });
     }
 
+    // right arrow button to move to the next level
     if (scene.levelNum < 8) {
         let right = scene.add.image(400 + 100, 288 + 80, 'rightButton');
         right.setInteractive();
-        right.on('pointerdown', function(pointer) {
+        right.on('pointerdown', function (pointer) {
             let scene = pointer.manager.game.scene;
             let sokobanLevel = scene.keys['level'];
-            
+
             let worldNum = sokobanLevel.worldNum;
             let levelNum = sokobanLevel.levelNum;
 
@@ -571,7 +420,7 @@ function levelCompleteHandler(scene) {
             });
         });
     }
-    
+
 }
 
 export default SokobanLevel;

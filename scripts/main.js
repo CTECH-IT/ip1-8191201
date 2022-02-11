@@ -12,8 +12,8 @@ let menu = new Menu();
 
 let config = {
     type: Phaser.AUTO,
-    width: tileWidth*32,
-    height: tileHeight*32,
+    width: tileWidth * 32,
+    height: tileHeight * 32,
     autoCenter: Phaser.Scale.CENTER_BOTH,
     physics: {
         default: 'arcade',
