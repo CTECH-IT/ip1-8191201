@@ -104,7 +104,6 @@ function createInteractives(scene) {
     let levelSelect = scene.levelSelect;
     let credits = scene.credits;
     let playButton = scene.playButton;
-    let charDisplay = scene.charDisplay;
     let charSelect = scene.charSelect;
 
     // cycle through possible ninjas and save/select from local storage
@@ -164,7 +163,9 @@ function createInteractives(scene) {
     levelSelect.setInteractive();
     levelSelect.on('pointerdown', function (pointer) {
         let scene = pointer.manager.game.scene;
-        scene.start('select');
+        scene.start('select', {
+            loadNum: localStorage.getItem('world')
+        });
     });
 }
 

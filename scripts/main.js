@@ -1,5 +1,6 @@
 import SokobanLevel from "./sokoban_level.js";
 import Menu from "./menu.js"
+import LevelSelect from "./level_select.js";
 
 var score = 0;
 var scoreText;
@@ -8,6 +9,7 @@ let tileWidth = 25;
 let tileHeight = 18;
 
 let level = new SokobanLevel();
+let levelSelect = new LevelSelect();
 let menu = new Menu();
 
 let config = {
@@ -22,7 +24,7 @@ let config = {
             forceX: true
         }
     },
-    scene: [menu, level]
+    scene: [menu, levelSelect, level]
 }
 
 let game = new Phaser.Game(config)
