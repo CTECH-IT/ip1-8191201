@@ -138,7 +138,7 @@ function createInteractives(scene) {
     // hehe
     credits.setInteractive();
     credits.on('pointerdown', function (pointer) {
-        window.open('https://michaelyhuang.com', '_blank');
+        window.open('https://mhua.ng', '_blank');
     });
 
     // play from stored world/level
