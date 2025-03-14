@@ -44,13 +44,23 @@ class SokobanLevel extends Phaser.Scene {
         this.load.image('levelSelect', 'assets/level_select.png');
         this.load.image('leftButton', 'assets/left_arrow.png');
         this.load.image('rightButton', 'assets/right_arrow.png');
-        this.load.spritesheet('ninja',
-            'assets/ninjas/' + this.ninja + '.png',
-            { frameWidth: 32, frameHeight: 32, margin: 2, spacing: 2 }
-        );
+        
+        ninjas = ['blackninja', 'redninja', 'greenninja', 'grayninja', 'blueninja', 'amogus'];
+        for (let i = 0; i < ninjas.length; i++) {
+            let ninja = ninjas[i];
+            this.load.spritesheet(ninja,
+                'assets/ninjas/' + ninja + '.png',
+                { frameWidth: 32, frameHeight: 32, margin: 2, spacing: 2 }
+            );
+        }
     }
 
     create() {
+        this.ninja = localStorage.getItem('ninja');
+        if (this.ninja == null) {
+            this.ninja = 'blackninja';
+        }
+        
         this.add.image(400, 288, 'floor' + this.worldNum);
         this.add.image(400, 288, 'floorGrid');
 
@@ -86,7 +96,7 @@ class SokobanLevel extends Phaser.Scene {
         make(worldMap, goalOverlays, goalLocations, shift, 'goalOverlay' + this.worldNum);
 
         // create player sprite and define bounding box & properties
-        this.player = this.physics.add.sprite((this.playerStart[0] + shift[0]) * 32 + 16, (this.playerStart[1] + shift[1]) * 32 + 16, 'ninja');
+        this.player = this.physics.add.sprite((this.playerStart[0] + shift[0]) * 32 + 16, (this.playerStart[1] + shift[1]) * 32 + 16, this.ninja);
         let player = this.player;
         player.setBounce(0);
         player.setCollideWorldBounds(true);
@@ -104,25 +114,25 @@ class SokobanLevel extends Phaser.Scene {
         // create animations
         this.anims.create({
             key: 'down',
-            frames: this.anims.generateFrameNumbers('ninja', { start: 0, end: 3 }),
+            frames: this.anims.generateFrameNumbers(this.ninja, { start: 0, end: 3 }),
             frameRate: 10,
             repeat: -1
         });
         this.anims.create({
             key: 'up',
-            frames: this.anims.generateFrameNumbers('ninja', { start: 4, end: 7 }),
+            frames: this.anims.generateFrameNumbers(this.ninja, { start: 4, end: 7 }),
             frameRate: 10,
             repeat: -1
         });
         this.anims.create({
             key: 'left',
-            frames: this.anims.generateFrameNumbers('ninja', { start: 8, end: 11 }),
+            frames: this.anims.generateFrameNumbers(this.ninja, { start: 8, end: 11 }),
             frameRate: 10,
             repeat: -1
         });
         this.anims.create({
             key: 'right',
-            frames: this.anims.generateFrameNumbers('ninja', { start: 12, end: 15 }),
+            frames: this.anims.generateFrameNumbers(this.ninja, { start: 12, end: 15 }),
             frameRate: 10,
             repeat: -1
         });
